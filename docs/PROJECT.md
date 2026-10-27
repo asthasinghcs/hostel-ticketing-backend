@@ -25,18 +25,18 @@ This guide describes the repaired local implementation of the hostel grievance a
 
 ## Purpose and workflow
 
-Students report maintenance problems in KP-1, KP-2, or KP-3. Categories are Wi-Fi, AC, Water Purifier, Sanitation, Mess Food, and Other. Tickets begin as Open. An administrator or any warden can move a ticket to In Progress or Resolved, or reopen it. A ticket that remains unresolved for more than 48 hours is flagged overdue when the API reads it.
+Students report maintenance problems across the 36 configured hostels: KP-1–KP-25 and QC-1–QC-11. These ranges were confirmed by the project owner. Categories are Wi-Fi, AC, Water Purifier, Sanitation, Mess Food, and Other. Tickets begin as Open. An administrator or any warden can move a ticket to In Progress or Resolved, or reopen it. A ticket that remains unresolved for more than 48 hours is flagged overdue when the API reads it.
 
 Students can only read, create, vote on, and discuss tickets belonging to their registered hostel. Other-hostel tickets, discussions, and totals are blocked by the API, including direct requests with forged filters or guessed ticket IDs. Votes represent shared impact, with one vote per student per ticket. Resolved tickets cannot receive new votes; discussion remains available.
 
-Students enter their registered hostel only. Wardens and administrators initially see all hostels and can filter to KP-1, KP-2, or KP-3. Counts always cover every status in the selected block, even when the ticket list has a status filter. Sorting supports newest first and most votes.
+Students enter their registered hostel only. Wardens and administrators initially see all hostels and can filter to any KP or QC hostel. Counts always cover every status in the selected block, even when the ticket list has a status filter. Sorting supports newest first and most votes.
 
 ## Architecture and source map
 
 ```mermaid
 flowchart LR
   UI["React + Vite browser app"] -->|"JSON over HTTP; bearer session"| API["Flask REST API"]
-  API --> DB[("SQLite: users, tickets, votes, comments, sessions")]
+  API --> DB[("SQLite: users, tickets, votes, comments, sessions, ticket_events, demo_batches")]
   CLI["Trusted staff provisioning CLI"] --> DB
 ```
 
@@ -47,7 +47,9 @@ flowchart LR
 | Frontend: src/Auth.jsx | Landing page, student/staff portal, hostel selection, registration/login |
 | Frontend: src/Dashboard.jsx, Sidebar.jsx, OverviewPanels.jsx | Workspace, navigation, live totals, filters, hostel insights |
 | Frontend: src/TicketCard.jsx, TicketForm.jsx, components.jsx | Tickets, discussions, native dialogs, shared UI |
-| Frontend: src/useOverview.js, tickets.js | Snapshot loading, refresh, search and list filters |
+| Frontend: src/useOverview.js, tickets.js | Snapshot loading, date-range refresh, search and list filters |
+| Frontend: src/HostelPicker.jsx, DateFilters.jsx, hostels.json | Grouped KP/QC selection, date tracking, shared catalogue |
+| Backend: database.py, hostels.json, demo/grievances.json | Safe migration, catalogue, synthetic 40-record fixture |
 | Frontend: src/api.js | Configurable API URL, bearer token handling, timeouts, cancellation, readable errors |
 | Frontend: src/App.css | Shared styling, keyboard focus, responsive layouts |
 | Frontend: src/index.css | Entry stylesheet; duplicate app rules removed |
@@ -124,25 +126,21 @@ npm run lint
 npm run build
 ```
 
-### Optional isolated demo data
+### Recent synthetic demo data
 
-Run seed.py only against an empty demo database:
+See [the complete demo login guide](DEMO_ACCOUNTS.md) for all 40 unique student accounts and three staff accounts. Student emails use numeric rollnumber@kiit.ac.in identifiers. Staff demo identifiers use distinct Gmail-formatted addresses. These are fictional application accounts; no external email inboxes are created or verified.
+
+The fixture includes 40 realistic, distinct grievances across all 36 hostels: 24 Open, 8 In Progress, and 8 Resolved. Dates cover seven campus calendar dates ending at the seed anchor. Every synthetic ticket is labelled Demo. The concrete reference sample covers 21–27 October 2026 (IST).
+
+To append without replacing existing records, set DATABASE_PATH to the intended database and run:
 
 ```powershell
-$env:DATABASE_PATH = 'C:/hostel-ticketing-backend/demo.db'
-python seed.py
-python app.py
+python seed.py --append-demo
 ```
 
-The demo includes ten students, two wardens, one administrator, eighteen tickets, and sample votes. The script refuses to seed an existing populated database. Do not use demo credentials in a real deployment.
+On an empty database, python seed.py loads the same fixture. Without --append-demo, a populated database is refused. Import is atomic: email collisions abort the batch. Repeating the same batch does not duplicate data or reset dates/passwords. Public demo passwords are committed only for these explicitly synthetic accounts. Use a separate demonstration database when real users are involved.
 
-Demo-only accounts:
-
-| Role | Email | Password |
-| --- | --- | --- |
-| Student | astha@kiit.ac.in | password123 |
-| Warden KP-1 | warden.kp1@kiit.ac.in | adminpass |
-| Admin | admin@kiit.ac.in | adminpass |
+The local import retained all previous rows, added 40 grievances, and increased the total from 20 to 60. A SQLite backup was saved before import. The database and its backup remain excluded from Git; the fixture, demo account guide, and a dated sample JSON are tracked.
 
 ### Create real staff accounts
 
@@ -187,36 +185,39 @@ Base URL in local development: http://localhost:5000. Bodies and responses use J
 
 | Method | Path | Input / behavior |
 | --- | --- | --- |
+| GET | /api/hostels | Public catalogue with 36 configured hostels grouped as KP (25) and QC (11) |
 | GET | /api/health | Public health result: status=ok; verifies the users table can be read |
 | POST | /api/signup | name, email, password, hostel_block; optional role must be student |
 | POST | /api/login | email, password; optional portal=student or staff; student portal requires the registered hostel_block |
 | GET | /api/me | Returns current server-verified user |
 | POST | /api/logout | Revokes current session |
-| GET | /api/tickets | Optional hostel_block, status, sort=newest or votes |
+| GET | /api/tickets | Optional hostel_block, status, sort=newest or votes, date_from, date_to |
 | POST | /api/tickets | category, description, hostel_block; optional floor and room_no |
 | PATCH | /api/tickets/{id}/status | status: Open, In Progress, or Resolved |
 | POST | /api/tickets/{id}/vote | Empty JSON object; identity comes from session |
 | GET | /api/tickets/{id}/comments | Ordered discussion, oldest first |
 | POST | /api/tickets/{id}/comments | text |
 | GET | /api/stats | Optional hostel_block; role scope always enforced |
-| GET | /api/overview | Matching tickets and stats in one SQLite read snapshot; updated_at timestamp |
+| GET | /api/overview | Matching tickets and stats in one SQLite read snapshot; optional date_from/date_to and hostel_block |
+| GET | /api/tickets/{id}/history | Creation and status-change events with actor and UTC timestamp; hostel scope enforced |
 
 Ticket responses contain stored ticket fields plus vote_count, has_voted, and overdue. The user_id field supplied by a client is ignored for creation and voting; the authenticated identity is used instead.
 
 Comment responses include id, ticket_id, text, author_name, author_role, and created_at. User emails and password hashes are not exposed in comments or authentication responses.
 
-Stats return total, open, in_progress, resolved, overdue, and my_total. Student totals always belong to their registered hostel; my_total counts their own submissions. Staff can view all-hostel or selected-hostel counts.
+Stats return total, open, in_progress, resolved, overdue, my_total, demo_count, hostels_available, by_date, and date_range. by_date is ordered by campus date; date_range identifies the Asia/Kolkata timezone. Student totals always belong to their registered hostel; my_total counts their own submissions. Staff can view all-hostel or selected-hostel counts.
 
 Validation limits:
 
 - Name: 1–100 trimmed characters.
-- Email: up to 254 characters, normalized to lowercase, with basic structural validation and case-insensitive duplicate checks. Email ownership is not verified.
+- New student email: 6–12 digits followed by @kiit.ac.in, normalized to lowercase, with case-insensitive duplicate checks. Legacy logins remain valid. Staff email format is separate. Email ownership is not verified.
 - New password: 8–128 characters.
 - Description: 1–4000 trimmed characters.
 - Floor and room: optional, up to 30 characters each.
 - Comment: 1–2000 trimmed characters.
 - Request body: at most 32 KiB.
 - Block, category, status, and sort values must be from the supported lists.
+- Date filters: valid YYYY-MM-DD dates from 1970 onward; start must not exceed end. Dates refer to India calendar dates, and the end date is included.
 
 Errors use {"error": "Readable message"} and appropriate HTTP codes: 400 for malformed or invalid input, 401 for absent/expired sessions or invalid credentials, 403 for insufficient permissions, 404 for missing tickets, 409 for conflicts such as duplicate votes/emails or resolved-ticket voting, and 413 for oversized requests. Unexpected server errors return a generic JSON message while details are logged server-side.
 
@@ -229,10 +230,12 @@ Tables:
 - votes: ticket/user relationship with a unique pair constraint.
 - comments: ticket/user relationship and discussion text.
 - sessions: token digest, user relationship, expiry.
+- ticket_events: creation/status-change audit records with actor and timestamp.
+- demo_batches: applied synthetic batch identifier and anchor; users/tickets carry optional demo_batch_id provenance.
 
-Foreign-key enforcement is enabled for API connections. New writes cannot create votes, comments, or tickets with missing referenced users/tickets. Initialization adds missing tables and indexes using IF NOT EXISTS. It does not drop tables, reset IDs, seed data, or rewrite historical timestamps.
+Foreign-key enforcement is enabled for API connections. New writes cannot create votes, comments, or tickets with missing referenced users/tickets. Initialization adds missing tables and indexes using IF NOT EXISTS. It does not drop tables, reset IDs, seed data, or rewrite historical timestamps. Migration adds missing demo provenance columns and backfills known ticket-creation events. It does not invent earlier status changes.
 
-New dates and overdue calculations use UTC. The browser renders dates in its local timezone. Historical timestamps have no timezone metadata; they are retained and interpreted as UTC. If older records were generated in a different local timezone, their original timezone must be established before a separate data correction.
+New dates and overdue calculations use UTC. The UI renders dates in India time (Asia/Kolkata), including the year. Calendar-date filters use the same timezone. Historical timestamps have no timezone metadata; they are retained and interpreted as UTC. If older records were generated in a different local timezone, their original timezone must be established before a separate data correction.
 
 Resolution sets resolved_at. Repeating Resolved preserves that timestamp. Reopening clears it. Overdue is calculated from the original creation time, so reopening an old ticket can immediately make it overdue again.
 
@@ -246,13 +249,13 @@ Registration records the hostel selected by the student; this project has no ins
 
 The dashboard reads GET /api/overview to obtain a ticket list and counters from one database snapshot. API responses and browser requests disable caching. A new ticket is committed before its success response; the form then waits for an overview refresh. After successful creation, search/category/status/personal filters reset and sorting returns to newest so the new ticket is visible. A refresh failure is reported without resubmitting or duplicating the saved ticket.
 
-The overview refreshes after successful mutations, every 30 seconds while the page is visible, when the browser regains focus, and when Refresh is pressed. In-flight silent refreshes are allowed to finish rather than repeatedly being canceled by the timer. Old hostel requests cannot overwrite a newer selection. Status and category filters affect the list, not hostel totals. The personal ticket count and hostel count are labeled separately. Resolving or reopening a ticket changes status totals without adding another raised ticket.
+The overview refreshes after successful mutations, every 30 seconds while the page is visible, when the browser regains focus, and when Refresh is pressed. In-flight silent refreshes are allowed to finish rather than repeatedly being canceled by the timer. Old hostel requests cannot overwrite a newer selection. Status and category filters affect the list, not hostel totals. The personal ticket count and hostel count are labeled separately. Date filters apply to both tickets and counters; status/category/search filters affect only the list. Dates reset after ticket submission so a new grievance is visible. Resolving or reopening a ticket changes status totals without adding another raised ticket.
 
 ## Interface
 
-The landing page has separate Student and Warden & admin portals and interactive KP-1/KP-2/KP-3 cards. Student login checks the chosen hostel against the stored account. Selecting Staff does not grant a student staff access. Signup remains student-only.
+The landing page has separate Student and Warden & admin portals and interactive KP/QC group cards and a numbered hostel selector. Student login checks the chosen hostel against the stored account. Selecting Staff does not grant a student staff access. Signup remains student-only.
 
-The workspace includes responsive navigation, personal tickets, hostel-specific or cross-hostel views, real search, category/status/overdue filters, vote sorting, resolution progress, category breakdowns, discussion updates, success notifications, and native keyboard-accessible dialogs. Supporting illustrations and icons are drawn in code; they do not require external image services. Reduced-motion preferences are respected. Desktop browser layout and workflows were checked; phone-specific browser emulation was unavailable in this session.
+The workspace includes Today/Last 7 days/custom date filters, selectable daily-activity bars, dated status history, responsive navigation, personal tickets, hostel-specific or cross-hostel views, real search, category/status/overdue filters, vote sorting, resolution progress, category breakdowns, discussion updates, success notifications, and native keyboard-accessible dialogs. Supporting illustrations and icons are drawn in code; they do not require external image services. Reduced-motion preferences are respected. Desktop browser layout and workflows were checked; phone-specific browser emulation was unavailable in this session.
 
 ## Render deployment
 
@@ -293,8 +296,8 @@ Changes are stored on a review branch. No Render settings or live records were c
 
 Automated checks:
 
-- 24 backend tests: auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
-- 12 frontend tests: four search/filter/count-preservation checks plus eight API-client checks covering bearer headers, public login behavior, expired-session handling, stale 401 protection, network errors, non-JSON failures, cancellation, and timeouts.
+- 35 backend tests: auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, QC/high-numbered hostel coverage, roll-email validation, inclusive India-time date filtering, real status history, synthetic fixture uniqueness, append/idempotency/collision safety, author email privacy, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
+- 14 frontend tests: catalogue coverage, India-time calendar boundaries, four search/filter/count-preservation checks, and eight API-client checks covering bearer headers, public login behavior, expired-session handling, stale 401 protection, network errors, non-JSON failures, cancellation, and timeouts.
 - Frontend lint and production build pass.
 
 Browser checks used a separate disposable demo database. Verified wrong-hostel login rejection, a student workspace exposing only its registered hostel, the updated landing and dashboard, and ticket creation while a Resolved filter was active. The new ticket immediately appeared: KP-2 hostel total increased from 7 to 8, personal total from 2 to 3, and Open from 6 to 7. Wardens can sign into the Staff portal and manage every hostel. Earlier regression checks also covered signup, voting, comments, refresh persistence, logout, resolution, and expiry. Screenshots are supplied with this guide.
@@ -313,4 +316,10 @@ npm run build
 
 Tests create temporary databases and do not use the real database. HOSTEL_TEST_TMP can override the temporary directory when running in a restricted environment.
 
-This remains a small hostel application. Password reset, email verification, notifications, file attachments, immutable status history, staff assignment workflows, and distributed scaling are outside this implementation. Internet-facing operation should also add a login/signup rate limit at the deployment edge. These are follow-up capabilities, not features claimed by this repair.
+This remains a small hostel application. Password reset, email verification, notifications, file attachments, staff assignment workflows, and distributed scaling are outside this implementation. Internet-facing operation should also add a login/signup rate limit at the deployment edge. These are follow-up capabilities, not features claimed by this repair.
+
+## Recent-data verification
+
+The 40-row demo reference was imported at 2026-10-27 09:54:35 UTC. Its campus-date distribution is 21 Oct: 5; 22 Oct: 5; 23 Oct: 6; 24 Oct: 5; 25 Oct: 6; 26 Oct: 6; 27 Oct: 7. The batch contains 40 distinct numeric student emails and 40 distinct student passwords. Existing rows were compared before and after import and retained unchanged. Git tracks only the synthetic fixtures and documentation, not the local database or backup.
+
+Browser verification of this update confirmed QC-1 login with a numeric student email, QC-only ticket content, timestamped creation/progress history, staff access to all 36 hostels, 60 all-time tickets, exactly 40 grievances in 21–27 October, and selection of 26 October reducing the view and totals to six tickets.

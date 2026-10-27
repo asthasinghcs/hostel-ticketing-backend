@@ -1,0 +1,52 @@
+{
+  "groups": [
+    {
+      "code": "KP",
+      "name": "King's Palace",
+      "hostels": [
+        "KP-1",
+        "KP-2",
+        "KP-3",
+        "KP-4",
+        "KP-5",
+        "KP-6",
+        "KP-7",
+        "KP-8",
+        "KP-9",
+        "KP-10",
+        "KP-11",
+        "KP-12",
+        "KP-13",
+        "KP-14",
+        "KP-15",
+        "KP-16",
+        "KP-17",
+        "KP-18",
+        "KP-19",
+        "KP-20",
+        "KP-21",
+        "KP-22",
+        "KP-23",
+        "KP-24",
+        "KP-25"
+      ]
+    },
+    {
+      "code": "QC",
+      "name": "Queen's Castle",
+      "hostels": [
+        "QC-1",
+        "QC-2",
+        "QC-3",
+        "QC-4",
+        "QC-5",
+        "QC-6",
+        "QC-7",
+        "QC-8",
+        "QC-9",
+        "QC-10",
+        "QC-11"
+      ]
+    }
+  ]
+}

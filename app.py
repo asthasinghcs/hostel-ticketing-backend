@@ -2,9 +2,11 @@
 import hashlib
 import hmac
 import os
+import json
+import re
 import secrets
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time
 from functools import wraps
 from pathlib import Path
 
@@ -13,8 +15,12 @@ from flask_cors import CORS
 from werkzeug.exceptions import Forbidden, HTTPException, NotFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from database import initialize_database
+
 ROOT = Path(__file__).resolve().parent
-BLOCKS = ("KP-1", "KP-2", "KP-3")
+HOSTEL_GROUPS = json.loads((ROOT / "hostels.json").read_text(encoding="utf-8"))["groups"]
+BLOCKS = tuple(block for group in HOSTEL_GROUPS for block in group["hostels"])
+CAMPUS_TZ = timezone(timedelta(hours=5, minutes=30))
 CATEGORIES = ("Wi-Fi", "AC", "Water Purifier", "Sanitation", "Mess Food", "Other")
 STATUSES = ("Open", "In Progress", "Resolved")
 OVERDUE_HOURS = 48
@@ -40,8 +46,7 @@ def get_db():
 def init_db():
     """Add missing tables/indexes; never drop or reseed existing data."""
     db = get_db()
-    db.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
-    db.commit()
+    initialize_database(db)
 
 
 def public_user(row):
@@ -130,7 +135,15 @@ def is_overdue(row):
 def ticket_dict(row):
     result = dict(row)
     result["overdue"] = is_overdue(row)
+    result["is_demo"] = bool(row["demo_batch_id"])
     db = get_db()
+    owner = db.execute("SELECT name,email FROM users WHERE id=?", (row["user_id"],)).fetchone() if "author_name" not in row.keys() else row
+    result["author_name"] = owner["name"] if "author_name" not in row.keys() else row["author_name"]
+    author_email = owner["email"] if "author_name" not in row.keys() else row["author_email"]
+    if g.user["role"] in ("admin", "warden") or row["user_id"] == g.user["id"]:
+        result["author_email"] = author_email
+    else:
+        result.pop("author_email", None)
     if "vote_count" not in row.keys():
         result["vote_count"] = db.execute("SELECT COUNT(*) FROM votes WHERE ticket_id=?", (row["id"],)).fetchone()[0]
         result["has_voted"] = db.execute("SELECT 1 FROM votes WHERE ticket_id=? AND user_id=?", (row["id"], g.user["id"])).fetchone() is not None
@@ -174,6 +187,11 @@ def unexpected_error(error):
     return jsonify(error="The server could not complete the request. Please try again."), 500
 
 
+@app.get("/api/hostels")
+def hostel_catalog():
+    return jsonify(groups=HOSTEL_GROUPS, total=len(BLOCKS))
+
+
 @app.get("/api/health")
 def health():
     get_db().execute("SELECT 1 FROM users LIMIT 1")
@@ -189,8 +207,8 @@ def signup():
     email = field(data, "email", 254).lower()
     password = data.get("password")
     block = field(data, "hostel_block", 10)
-    if email.count("@") != 1 or not all(email.split("@")) or any(c.isspace() for c in email):
-        raise ValueError("Enter a valid email address.")
+    if not re.fullmatch(r"[0-9]{6,12}@kiit\.ac\.in", email):
+        raise ValueError("Use your roll-number email, for example 24054001@kiit.ac.in.")
     if not isinstance(password, str) or not 8 <= len(password) <= 128:
         raise ValueError("Password must contain 8 to 128 characters.")
     if block not in BLOCKS:
@@ -250,6 +268,40 @@ def logout():
     return jsonify(message="Signed out.")
 
 
+def date_bounds():
+    raw_from, raw_to = request.args.get("date_from", ""), request.args.get("date_to", "")
+    dates = []
+    for raw in (raw_from, raw_to):
+        if raw and not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", raw):
+            raise ValueError("Dates must use YYYY-MM-DD.")
+        try:
+            dates.append(datetime.strptime(raw, "%Y-%m-%d").date() if raw else None)
+        except ValueError:
+            raise ValueError("Enter a valid calendar date.") from None
+    start, end = dates
+    if any(day and day.year < 1970 for day in dates):
+        raise ValueError("Dates must be in 1970 or later.")
+    if start and end and start > end:
+        raise ValueError("The start date cannot be after the end date.")
+    if end and end.year >= 9999:
+        raise ValueError("Date range is outside the supported calendar.")
+    lower = datetime.combine(start, time.min, CAMPUS_TZ).astimezone(timezone.utc).replace(tzinfo=None) if start else None
+    upper = datetime.combine(end + timedelta(days=1), time.min, CAMPUS_TZ).astimezone(timezone.utc).replace(tzinfo=None) if end else None
+    return lower, upper
+
+
+def date_clause(prefix=""):
+    lower, upper = date_bounds()
+    query, params = "", []
+    if lower:
+        query += f" AND {prefix}created_at >= ?"
+        params.append(timestamp(lower))
+    if upper:
+        query += f" AND {prefix}created_at < ?"
+        params.append(timestamp(upper))
+    return query, params
+
+
 def get_tickets():
     block = block_scope()
     status = request.args.get("status", "")
@@ -258,14 +310,17 @@ def get_tickets():
         raise ValueError("Invalid status.")
     if sort not in ("newest", "votes"):
         raise ValueError("Invalid sort order.")
-    query = ("SELECT t.*, COUNT(v.id) AS vote_count, "
+    query = ("SELECT t.*, owner.name AS author_name, owner.email AS author_email, COUNT(v.id) AS vote_count, "
              "MAX(CASE WHEN v.user_id=? THEN 1 ELSE 0 END) AS has_voted "
-             "FROM tickets t LEFT JOIN votes v ON v.ticket_id=t.id WHERE 1=1")
+             "FROM tickets t JOIN users owner ON owner.id=t.user_id LEFT JOIN votes v ON v.ticket_id=t.id WHERE 1=1")
     params = [g.user["id"]]
     for key, value in (("hostel_block", block), ("status", status)):
         if value:
             query += f" AND t.{key}=?"
             params.append(value)
+    date_query, date_params = date_clause("t.")
+    query += date_query
+    params.extend(date_params)
     rows = get_db().execute(query + " GROUP BY t.id ORDER BY t.created_at DESC, t.id DESC", params).fetchall()
     tickets = [ticket_dict(row) for row in rows]
     if sort == "votes":
@@ -295,6 +350,8 @@ def create_ticket():
     db = get_db()
     cur = db.execute("INSERT INTO tickets (user_id,category,description,hostel_block,floor,room_no) VALUES (?,?,?,?,?,?)",
                      (g.user["id"], category, description, block, floor or None, room or None))
+    db.execute("INSERT INTO ticket_events (ticket_id,actor_id,event_type,to_status) VALUES (?,?,'created','Open')",
+               (cur.lastrowid, g.user["id"]))
     db.commit()
     return jsonify(ticket_dict(accessible_ticket(cur.lastrowid))), 201
 
@@ -302,13 +359,18 @@ def create_ticket():
 @app.patch("/api/tickets/<int:ticket_id>/status")
 @authenticated("admin", "warden")
 def update_status(ticket_id):
-    row = accessible_ticket(ticket_id)
     status = body().get("status")
     if status not in STATUSES:
         raise ValueError("Invalid status.")
+    db = get_db()
+    db.execute("BEGIN IMMEDIATE")
+    row = accessible_ticket(ticket_id)
     resolved_at = (row["resolved_at"] or timestamp(utcnow())) if status == "Resolved" else None
     db = get_db()
     db.execute("UPDATE tickets SET status=?, resolved_at=? WHERE id=?", (status, resolved_at, ticket_id))
+    if status != row["status"]:
+        db.execute("INSERT INTO ticket_events (ticket_id,actor_id,event_type,from_status,to_status) VALUES (?,?,'status_changed',?,?)",
+                   (ticket_id, g.user["id"], row["status"], status))
     db.commit()
     return jsonify(ticket_dict(accessible_ticket(ticket_id)))
 
@@ -330,6 +392,18 @@ def vote_ticket(ticket_id):
         db.rollback()
         return jsonify(error="You already voted on this ticket."), 409
     return jsonify(ticket_dict(accessible_ticket(ticket_id))), 201
+
+
+@app.get("/api/tickets/<int:ticket_id>/history")
+@authenticated()
+def ticket_history(ticket_id):
+    accessible_ticket(ticket_id)
+    rows = get_db().execute(
+        "SELECT e.id,e.event_type,e.from_status,e.to_status,e.created_at,u.name AS actor_name,u.role AS actor_role "
+        "FROM ticket_events e LEFT JOIN users u ON e.actor_id=u.id WHERE e.ticket_id=? ORDER BY e.created_at,e.id",
+        (ticket_id,),
+    ).fetchall()
+    return jsonify([dict(row) for row in rows])
 
 
 @app.get("/api/tickets/<int:ticket_id>/comments")
@@ -361,13 +435,26 @@ def add_comment(ticket_id):
 
 def get_stats():
     block = block_scope()
-    rows = get_db().execute("SELECT * FROM tickets" + (" WHERE hostel_block=?" if block else ""),
-                            (block,) if block else ()).fetchall()
+    query = "SELECT * FROM tickets WHERE 1=1"
+    params = []
+    if block:
+        query += " AND hostel_block=?"
+        params.append(block)
+    date_query, date_params = date_clause()
+    rows = get_db().execute(query + date_query, params + date_params).fetchall()
     counts = {"total": len(rows), "open": 0, "in_progress": 0, "resolved": 0, "overdue": 0}
     for row in rows:
         counts[row["status"].lower().replace(" ", "_")] += 1
         counts["overdue"] += int(is_overdue(row))
     counts["my_total"] = sum(1 for row in rows if row["user_id"] == g.user["id"])
+    counts["demo_count"] = sum(1 for row in rows if row["demo_batch_id"])
+    counts["hostels_available"] = 1 if g.user["role"] == "student" else len(BLOCKS)
+    daily = {}
+    for row in rows:
+        date = datetime.fromisoformat(row["created_at"]).replace(tzinfo=timezone.utc).astimezone(CAMPUS_TZ).date().isoformat()
+        daily[date] = daily.get(date, 0) + 1
+    counts["by_date"] = [{"date": date, "total": daily[date]} for date in sorted(daily)]
+    counts["date_range"] = {"from": request.args.get("date_from", ""), "to": request.args.get("date_to", ""), "timezone": "Asia/Kolkata"}
     return counts
 
 

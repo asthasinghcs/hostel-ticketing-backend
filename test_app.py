@@ -36,8 +36,8 @@ class ApiTests(unittest.TestCase):
                 ('Warden 2', 'warden2@example.test', self.staff_hash, 'warden', 'KP-2'),
             ])
             db.commit()
-        self.student = self.signup('one@example.test', 'KP-1')
-        self.other = self.signup('two@example.test', 'KP-2')
+        self.student = self.signup('24059901@kiit.ac.in', 'KP-1')
+        self.other = self.signup('24059902@kiit.ac.in', 'KP-2')
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -79,7 +79,7 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(response.status_code, 403)
 
     def test_every_business_endpoint_requires_authentication(self):
-        for method, path in [('get', '/api/tickets'), ('get', '/api/stats'), ('get', '/api/overview'), ('get', '/api/me'), ('post', '/api/tickets'), ('patch', '/api/tickets/1/status'), ('post', '/api/tickets/1/vote'), ('get', '/api/tickets/1/comments'), ('post', '/api/tickets/1/comments')]:
+        for method, path in [('get', '/api/tickets'), ('get', '/api/stats'), ('get', '/api/overview'), ('get', '/api/me'), ('post', '/api/tickets'), ('patch', '/api/tickets/1/status'), ('post', '/api/tickets/1/vote'), ('get', '/api/tickets/1/comments'), ('get', '/api/tickets/1/history'), ('post', '/api/tickets/1/comments')]:
             response = getattr(self.client, method)(path, json={})
             self.assertEqual(response.status_code, 401, path)
 
@@ -93,16 +93,16 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/me', headers=self.auth(self.other)).status_code, 401)
 
     def test_login_invalid_credentials_and_case_insensitive_email(self):
-        self.assertEqual(self.client.post('/api/login', json={'email': 'one@example.test', 'password': 'wrong'}).status_code, 401)
-        self.assertEqual(self.client.post('/api/login', json={'email': ' ONE@EXAMPLE.TEST ', 'password': 'password123'}).status_code, 200)
-        self.assertEqual(self.client.post('/api/signup', json=dict(name='Duplicate', email='ONE@example.test', password='password123', hostel_block='KP-1')).status_code, 409)
+        self.assertEqual(self.client.post('/api/login', json={'email': '24059901@kiit.ac.in', 'password': 'wrong'}).status_code, 401)
+        self.assertEqual(self.client.post('/api/login', json={'email': ' 24059901@KIIT.AC.IN ', 'password': 'password123'}).status_code, 200)
+        self.assertEqual(self.client.post('/api/signup', json=dict(name='Duplicate', email='24059901@kiit.ac.in', password='password123', hostel_block='KP-1')).status_code, 409)
 
     def test_legacy_password_upgraded_without_data_loss(self):
         with app.app_context():
             db = get_db()
             db.execute('UPDATE users SET password=? WHERE id=?', (hashlib.sha256(b'legacy').hexdigest(), self.student['user']['id']))
             db.commit()
-        response = self.client.post('/api/login', json=dict(email='one@example.test', password='legacy'))
+        response = self.client.post('/api/login', json=dict(email='24059901@kiit.ac.in', password='legacy'))
         self.assertEqual(response.status_code, 200)
         with app.app_context():
             self.assertTrue(get_db().execute('SELECT password FROM users WHERE id=?', (self.student['user']['id'],)).fetchone()[0].startswith('scrypt:'))
@@ -142,13 +142,13 @@ class ApiTests(unittest.TestCase):
     def test_student_cannot_switch_hostel_or_read_guessed_ticket_discussions(self):
         other = self.ticket(self.other)
         headers = self.auth(self.student)
-        for path in ('/api/tickets?hostel_block=KP-2', '/api/stats?hostel_block=KP-2', '/api/overview?hostel_block=KP-2', f"/api/tickets/{other['id']}/comments"):
+        for path in ('/api/tickets?hostel_block=KP-2', '/api/stats?hostel_block=KP-2', '/api/overview?hostel_block=KP-2', f"/api/tickets/{other['id']}/comments", f"/api/tickets/{other['id']}/history"):
             response = self.client.get(path, headers=headers)
             self.assertEqual(response.status_code, 403, path)
             self.assertNotIn('Network is down', response.get_data(as_text=True))
 
     def test_landing_hostel_and_portal_never_override_account_permissions(self):
-        credentials = dict(email='one@example.test', password='password123', portal='student')
+        credentials = dict(email='24059901@kiit.ac.in', password='password123', portal='student')
         self.assertEqual(self.client.post('/api/login', json=dict(credentials, hostel_block='KP-2')).status_code, 403)
         self.assertEqual(self.client.post('/api/login', json=dict(credentials, hostel_block='KP-1')).status_code, 200)
         self.assertEqual(self.client.post('/api/login', json=dict(credentials, portal='staff')).status_code, 403)
@@ -172,7 +172,7 @@ class ApiTests(unittest.TestCase):
         filtered = self.client.get('/api/overview?status=Resolved', headers=headers).json
         self.assertEqual(filtered['tickets'], [])
         self.assertEqual(filtered['stats']['total'], 2)
-        fresh = self.client.post('/api/login', json=dict(email='one@example.test', password='password123')).json
+        fresh = self.client.post('/api/login', json=dict(email='24059901@kiit.ac.in', password='password123')).json
         self.assertEqual(self.client.get('/api/overview', headers=self.auth(fresh)).json['stats']['total'], 2)
         warden = self.auth(self.login('warden@example.test'))
         self.client.patch(f"/api/tickets/{first['id']}/status", headers=warden, json={'status':'Resolved'})
@@ -206,7 +206,7 @@ class ApiTests(unittest.TestCase):
         admin = self.auth(self.login('admin@example.test'))
         self.assertEqual(self.client.post(path, headers=admin, json={}).status_code, 403)
         self.client.patch(f"/api/tickets/{ticket['id']}/status", headers=admin, json={'status': 'Resolved'})
-        third = self.signup('third@example.test', 'KP-1')
+        third = self.signup('24059903@kiit.ac.in', 'KP-1')
         self.assertEqual(self.client.post(path, headers=self.auth(third), json={}).status_code, 409)
 
     def test_comment_lifecycle_identity_and_validation(self):
@@ -296,11 +296,88 @@ class ApiTests(unittest.TestCase):
 
     def test_staff_cli_cannot_overwrite_existing_student(self):
         import manage
-        argv = ['manage.py', 'create-staff', '--name', 'Admin', '--email', 'one@example.test', '--role', 'admin']
+        argv = ['manage.py', 'create-staff', '--name', 'Admin', '--email', '24059901@kiit.ac.in', '--role', 'admin']
         with patch.object(sys, 'argv', argv), patch('getpass.getpass', side_effect=['staffpassword', 'staffpassword']), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             manage.main()
         with app.app_context():
             self.assertEqual(get_db().execute('SELECT role FROM users WHERE id=?', (self.student['user']['id'],)).fetchone()[0], 'student')
+
+    def test_qc_catalog_and_high_numbered_hostel_access(self):
+        catalog = self.client.get('/api/hostels').json
+        self.assertEqual(catalog['total'], 36)
+        self.assertEqual([len(group['hostels']) for group in catalog['groups']], [25, 11])
+        qc = self.signup('24059904@kiit.ac.in', 'QC-11')
+        ticket = self.ticket(qc)
+        headers = self.auth(qc)
+        self.assertEqual(self.client.get('/api/overview', headers=headers).json['stats']['total'], 1)
+        self.assertEqual(self.client.get('/api/tickets?hostel_block=KP-25', headers=headers).status_code, 403)
+        self.assertEqual(self.client.get(f"/api/tickets/{ticket['id']}/history", headers=self.auth(self.student)).status_code, 403)
+        admin = self.auth(self.login('admin@example.test'))
+        self.assertEqual(self.client.get('/api/tickets?hostel_block=QC-11', headers=admin).json[0]['id'], ticket['id'])
+
+    def test_signup_requires_numeric_kiit_roll_number_email(self):
+        for email in ('somebody@gmail.com', 'student@kiit.ac.in', '12345@kiit.ac.in', '24054001@other.ac.in'):
+            response = self.client.post('/api/signup', json=dict(name='Test',email=email,password='password123',hostel_block='QC-1'))
+            self.assertEqual(response.status_code, 400)
+        self.signup('24059905@kiit.ac.in', 'KP-25')
+        response = self.client.post('/api/signup', json=dict(name='Test',email='24059906@kiit.ac.in',password='password123',hostel_block='QC-12'))
+        self.assertEqual(response.status_code, 400)
+
+    def test_campus_date_bounds_and_daily_totals(self):
+        first = self.ticket()
+        second = self.ticket()
+        third = self.ticket()
+        with app.app_context():
+            db=get_db()
+            db.executemany('UPDATE tickets SET created_at=? WHERE id=?', [('2026-10-26 18:29:59',first['id']),('2026-10-26 18:30:00',second['id']),('2026-10-27 18:29:59',third['id'])])
+            db.commit()
+        result = self.client.get('/api/overview?date_from=2026-10-27&date_to=2026-10-27', headers=self.auth(self.student))
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual({ticket['id'] for ticket in result.json['tickets']}, {second['id'],third['id']})
+        self.assertEqual(result.json['stats']['total'],2)
+        self.assertEqual(result.json['stats']['by_date'],[{'date':'2026-10-27','total':2}])
+        self.assertEqual(result.json['stats']['date_range']['timezone'],'Asia/Kolkata')
+        for query in ('date_from=2026-10-28&date_to=2026-10-27','date_from=2026-02-30','date_to=not-a-date','date_from=0001-01-01'):
+            self.assertEqual(self.client.get('/api/overview?'+query, headers=self.auth(self.student)).status_code,400)
+
+    def test_history_records_real_status_changes_only(self):
+        ticket=self.ticket()
+        staff=self.auth(self.login('warden@example.test'))
+        path=f"/api/tickets/{ticket['id']}/status"
+        for status in ('In Progress','Resolved','Resolved','Open'):
+            self.assertEqual(self.client.patch(path,headers=staff,json={'status':status}).status_code,200)
+        history=self.client.get(f"/api/tickets/{ticket['id']}/history",headers=self.auth(self.student)).json
+        self.assertEqual([event['to_status'] for event in history],['Open','In Progress','Resolved','Open'])
+        self.assertEqual(history[0]['event_type'],'created')
+        self.assertEqual(history[-1]['actor_role'],'warden')
+        self.assertEqual(len({event['id'] for event in history}),4)
+
+    def test_seeded_roll_number_accounts_can_login_to_their_qc_hostel(self):
+        from seed import seed_demo, load_fixture
+        result=seed_demo(app.config['DATABASE'], append=True)
+        self.assertEqual(result['ticket_count'],40)
+        fixture=load_fixture()
+        account=next(account for account in fixture['students'] if account['hostel_block']=='QC-11')
+        login=self.client.post('/api/login',json=dict(email=account['email'],password=account['password'],portal='student',hostel_block='QC-11'))
+        self.assertEqual(login.status_code,200)
+        headers=self.auth(login.json)
+        overview=self.client.get('/api/overview',headers=headers).json
+        self.assertEqual(overview['stats']['total'],1)
+        self.assertEqual(overview['stats']['demo_count'],1)
+        self.assertTrue(overview['tickets'][0]['is_demo'])
+        self.assertEqual(self.client.get('/api/overview?hostel_block=KP-1',headers=headers).status_code,403)
+
+    def test_author_email_is_visible_to_staff_and_owner_only(self):
+        peer=self.signup('24059907@kiit.ac.in','KP-1')
+        ticket=self.ticket(peer)
+        student_view=self.client.get('/api/tickets',headers=self.auth(self.student)).json
+        self.assertEqual(student_view[0]['id'],ticket['id'])
+        self.assertIn('author_name',student_view[0])
+        self.assertNotIn('author_email',student_view[0])
+        owner_view=self.client.get('/api/tickets',headers=self.auth(peer)).json
+        self.assertEqual(owner_view[0]['author_email'],'24059907@kiit.ac.in')
+        staff_view=self.client.get('/api/tickets',headers=self.auth(self.login('warden@example.test'))).json
+        self.assertEqual(staff_view[0]['author_email'],'24059907@kiit.ac.in')
 
     def test_cors_allows_only_configured_frontend(self):
         allowed = self.client.options('/api/tickets', headers={'Origin': 'http://localhost:5173', 'Access-Control-Request-Method': 'GET', 'Access-Control-Request-Headers': 'Authorization'})

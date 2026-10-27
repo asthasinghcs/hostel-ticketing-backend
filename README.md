@@ -32,10 +32,16 @@ Passwords are entered privately through prompts. Public signup can create studen
 python -m unittest -v
 ```
 
-Twenty-four tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
+Thirty-five tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
 
 ## Deployment
 
 Use gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 on Linux, persistent storage for DATABASE_PATH, and the deployed frontend origin in FRONTEND_ORIGINS. Deploy the matching frontend because authentication response contracts changed.
 
 See [the complete project guide](docs/PROJECT.md) for API payloads, migration details, role permissions, storage, deployment steps, and validation results. The previously committed database is excluded from source tracking; the local database file is retained.
+
+## Hostels, recent demo data, and dates
+
+The app supports 36 configured hostels: KP-1–KP-25 and QC-1–QC-11. New student accounts use rollnumber@kiit.ac.in. Today, Last 7 days, From/To filters, daily totals, and ticket history use India time.
+
+[Demo accounts and import instructions](docs/DEMO_ACCOUNTS.md) lists all 40 synthetic student logins and three staff logins. The backend fixture is appended once with `python seed.py --append-demo` after setting DATABASE_PATH; it preserves existing records and detects repeats. The concrete local sample increased the ticket total from 20 to 60.

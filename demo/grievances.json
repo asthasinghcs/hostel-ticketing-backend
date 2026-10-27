@@ -1,0 +1,588 @@
+{
+  "batch_id": "synthetic-campus-40-v1",
+  "synthetic": true,
+  "description": "40 fictional test grievances and identities. No email inboxes are created or verified. Passwords are public demo-only values. Never present these records as actual student submissions.",
+  "window_calendar_days": 7,
+  "students": [
+    {
+      "name": "Aarav Mehta",
+      "email": "24054001@kiit.ac.in",
+      "password": "Demo!KP1.01a",
+      "hostel_block": "KP-1",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The Wi-Fi disconnects every few minutes in the second-floor study room. I tried reconnecting on both my phone and laptop; the corridor connection works normally.",
+        "floor": "1",
+        "room_no": "111",
+        "status": "Open",
+        "age_weight": 23
+      }
+    },
+    {
+      "name": "Ishaan Sinha",
+      "email": "24054002@kiit.ac.in",
+      "password": "Demo!KP2.02a",
+      "hostel_block": "KP-2",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The first-floor purifier has very low flow even after waiting for the storage tank to refill. The nearby tap has normal pressure.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 79
+      }
+    },
+    {
+      "name": "Kabir Rao",
+      "email": "24054003@kiit.ac.in",
+      "password": "Demo!KP3.03a",
+      "hostel_block": "KP-3",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "Water is collecting near the third-floor washroom entrance after the morning cleaning. The floor stays slippery and the drain seems blocked.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 142
+      }
+    },
+    {
+      "name": "Rohan Verma",
+      "email": "24054004@kiit.ac.in",
+      "password": "Demo!KP4.04a",
+      "hostel_block": "KP-4",
+      "ticket": {
+        "category": "AC",
+        "description": "The AC in room 214 runs, but the air does not become cool after thirty minutes. The filter indicator is on and the windows are closed.",
+        "floor": "4",
+        "room_no": "414",
+        "status": "In Progress",
+        "age_weight": 214
+      }
+    },
+    {
+      "name": "Aditya Nair",
+      "email": "24054005@kiit.ac.in",
+      "password": "Demo!KP5.05a",
+      "hostel_block": "KP-5",
+      "ticket": {
+        "category": "Other",
+        "description": "One of the ceiling lights in the ground-floor reading room keeps flickering. The other lights are working; please check the fitting above the rear table.",
+        "floor": "1",
+        "room_no": null,
+        "status": "Resolved",
+        "age_weight": 337
+      }
+    },
+    {
+      "name": "Vivaan Das",
+      "email": "24054006@kiit.ac.in",
+      "password": "Demo!KP6.06a",
+      "hostel_block": "KP-6",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "Breakfast was served cold during the 8:15 am slot for the last two days. Please check whether the hot cases are keeping food warm until the later slot.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 489
+      }
+    },
+    {
+      "name": "Arjun Mishra",
+      "email": "24054007@kiit.ac.in",
+      "password": "Demo!KP7.07a",
+      "hostel_block": "KP-7",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The router near rooms 301 to 308 shows a red indicator. Students in this corridor cannot connect, while the connection near the stairs is available.",
+        "floor": "3",
+        "room_no": "317",
+        "status": "Open",
+        "age_weight": 782
+      }
+    },
+    {
+      "name": "Dhruv Patel",
+      "email": "24054008@kiit.ac.in",
+      "password": "Demo!KP8.08a",
+      "hostel_block": "KP-8",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The chilled-water outlet on the second floor is not dispensing, although the normal-water outlet works. The same issue continued after the lunch break.",
+        "floor": "4",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 1014
+      }
+    },
+    {
+      "name": "Reyansh Sen",
+      "email": "24054009@kiit.ac.in",
+      "password": "Demo!KP9.09a",
+      "hostel_block": "KP-9",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "The washbasin on the first floor is leaking from the pipe underneath. A bucket fills within an hour and water reaches the corridor if it is not emptied.",
+        "floor": "1",
+        "room_no": null,
+        "status": "In Progress",
+        "age_weight": 1331
+      }
+    },
+    {
+      "name": "Kunal Joshi",
+      "email": "24054010@kiit.ac.in",
+      "password": "Demo!KP10.10a",
+      "hostel_block": "KP-10",
+      "ticket": {
+        "category": "Other",
+        "description": "The latch on the common washroom door near the east staircase is loose and does not hold the door shut. Please repair it before the evening rush.",
+        "floor": "2",
+        "room_no": "220",
+        "status": "Resolved",
+        "age_weight": 1556
+      }
+    },
+    {
+      "name": "Anirudh Roy",
+      "email": "24054011@kiit.ac.in",
+      "password": "Demo!KP11.11a",
+      "hostel_block": "KP-11",
+      "ticket": {
+        "category": "AC",
+        "description": "The AC in the common reading room makes a rattling sound after a few minutes. It is louder near the indoor unit and interrupts evening study.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 1788
+      }
+    },
+    {
+      "name": "Dev Malhotra",
+      "email": "24054012@kiit.ac.in",
+      "password": "Demo!KP12.12a",
+      "hostel_block": "KP-12",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "The drinking-water jugs in the mess were empty through most of the dinner service yesterday. Please arrange a refill before the second dinner slot.",
+        "floor": "4",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 2013
+      }
+    },
+    {
+      "name": "Yash Agarwal",
+      "email": "24054013@kiit.ac.in",
+      "password": "Demo!KP13.13a",
+      "hostel_block": "KP-13",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The connection in room 126 is much slower than in the lobby. Video lectures buffer even when only one device is connected; the issue started this week.",
+        "floor": "1",
+        "room_no": "123",
+        "status": "Open",
+        "age_weight": 2314
+      }
+    },
+    {
+      "name": "Siddharth Bose",
+      "email": "24054014@kiit.ac.in",
+      "password": "Demo!KP14.14a",
+      "hostel_block": "KP-14",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The purifier near the north staircase displays a filter-service warning. The water has an unusual taste, so students are using another floor for now.",
+        "floor": "2",
+        "room_no": null,
+        "status": "In Progress",
+        "age_weight": 2548
+      }
+    },
+    {
+      "name": "Manav Shah",
+      "email": "24054015@kiit.ac.in",
+      "password": "Demo!KP15.15a",
+      "hostel_block": "KP-15",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "The bins beside the second-floor washroom have not been emptied since yesterday evening. Please arrange collection and replace the torn bin liner.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Resolved",
+        "age_weight": 2801
+      }
+    },
+    {
+      "name": "Nikhil Menon",
+      "email": "24054016@kiit.ac.in",
+      "password": "Demo!KP16.16a",
+      "hostel_block": "KP-16",
+      "ticket": {
+        "category": "Other",
+        "description": "The charging socket beside bed three in room 318 does not hold a plug securely. We have stopped using it and request an electrician to check it.",
+        "floor": "4",
+        "room_no": "426",
+        "status": "Open",
+        "age_weight": 3072
+      }
+    },
+    {
+      "name": "Pranav Kapoor",
+      "email": "24054017@kiit.ac.in",
+      "password": "Demo!KP17.17a",
+      "hostel_block": "KP-17",
+      "ticket": {
+        "category": "AC",
+        "description": "Water drips from the indoor AC unit in room 202 after about twenty minutes of use. It is reaching the study table below; please check the drain pipe.",
+        "floor": "1",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 3335
+      }
+    },
+    {
+      "name": "Ritvik Jain",
+      "email": "24054018@kiit.ac.in",
+      "password": "Demo!KP18.18a",
+      "hostel_block": "KP-18",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "The vegetarian counter ran out of rice before the end of the lunch slot today. Several students who came after their lab session had to wait for a refill.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 3601
+      }
+    },
+    {
+      "name": "Samar Iyer",
+      "email": "24054019@kiit.ac.in",
+      "password": "Demo!KP19.19a",
+      "hostel_block": "KP-19",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The access point in the first-floor lounge is visible, but authentication repeatedly fails with the correct credentials. The same account works in the library.",
+        "floor": "3",
+        "room_no": "329",
+        "status": "In Progress",
+        "age_weight": 3847
+      }
+    },
+    {
+      "name": "Tanmay Gupta",
+      "email": "24054020@kiit.ac.in",
+      "password": "Demo!KP20.20a",
+      "hostel_block": "KP-20",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The tray below the ground-floor purifier is overflowing because its drain is blocked. The drinking-water outlets work, but the area around the unit stays wet.",
+        "floor": "4",
+        "room_no": null,
+        "status": "Resolved",
+        "age_weight": 4123
+      }
+    },
+    {
+      "name": "Varun Kulkarni",
+      "email": "24054021@kiit.ac.in",
+      "password": "Demo!KP21.21a",
+      "hostel_block": "KP-21",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "The bathroom exhaust fan on the third floor has stopped working. Moisture remains in the room for a long time after the morning hours.",
+        "floor": "1",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 4402
+      }
+    },
+    {
+      "name": "Vihaan Bhat",
+      "email": "24054022@kiit.ac.in",
+      "password": "Demo!KP22.22a",
+      "hostel_block": "KP-22",
+      "ticket": {
+        "category": "Other",
+        "description": "The tube light on the second-floor stair landing is not turning on. The landing is difficult to see clearly after sunset; please replace the light.",
+        "floor": "2",
+        "room_no": "212",
+        "status": "Open",
+        "age_weight": 4680
+      }
+    },
+    {
+      "name": "Ayaan Saxena",
+      "email": "24054023@kiit.ac.in",
+      "password": "Demo!KP23.23a",
+      "hostel_block": "KP-23",
+      "ticket": {
+        "category": "AC",
+        "description": "The temperature display on the reading-room AC is blank and the unit cannot be started from the remote. The remote batteries have already been replaced.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 4948
+      }
+    },
+    {
+      "name": "Harsh Vardhan",
+      "email": "24054024@kiit.ac.in",
+      "password": "Demo!KP24.24a",
+      "hostel_block": "KP-24",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "The breakfast plates were still wet and had food residue during the morning service. Please check the washing and inspection process before the next meal.",
+        "floor": "4",
+        "room_no": null,
+        "status": "In Progress",
+        "age_weight": 5231
+      }
+    },
+    {
+      "name": "Neel Chatterjee",
+      "email": "24054025@kiit.ac.in",
+      "password": "Demo!KP25.25a",
+      "hostel_block": "KP-25",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "There is almost no Wi-Fi signal in the west end of the fourth-floor corridor. The signal improves near the staircase, so the issue may be with the nearby access point.",
+        "floor": "1",
+        "room_no": "115",
+        "status": "Resolved",
+        "age_weight": 5516
+      }
+    },
+    {
+      "name": "Ananya Sen",
+      "email": "24054026@kiit.ac.in",
+      "password": "Demo!QC1.26a",
+      "hostel_block": "QC-1",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The second-floor purifier is producing water with visible sediment after the supply resumed. Please inspect and flush the unit before normal use.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 5784
+      }
+    },
+    {
+      "name": "Diya Nair",
+      "email": "24054027@kiit.ac.in",
+      "password": "Demo!QC2.27a",
+      "hostel_block": "QC-2",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "A tap in the first-floor washroom does not close fully and runs continuously. The handle turns freely without stopping the flow.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 6073
+      }
+    },
+    {
+      "name": "Ishita Das",
+      "email": "24054028@kiit.ac.in",
+      "password": "Demo!QC3.28a",
+      "hostel_block": "QC-3",
+      "ticket": {
+        "category": "Other",
+        "description": "The reading-room window near the entrance does not close properly because the sliding track is bent. Rainwater entered during the last shower.",
+        "floor": "4",
+        "room_no": "418",
+        "status": "Open",
+        "age_weight": 6387
+      }
+    },
+    {
+      "name": "Kavya Mehta",
+      "email": "24054029@kiit.ac.in",
+      "password": "Demo!QC4.29a",
+      "hostel_block": "QC-4",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The Wi-Fi in the third-floor study area becomes unavailable around 9 pm. It returns later without changing the device settings; please check the access point schedule.",
+        "floor": "1",
+        "room_no": null,
+        "status": "In Progress",
+        "age_weight": 6621
+      }
+    },
+    {
+      "name": "Meera Rao",
+      "email": "24054030@kiit.ac.in",
+      "password": "Demo!QC5.30a",
+      "hostel_block": "QC-5",
+      "ticket": {
+        "category": "AC",
+        "description": "The common-room AC switches off within five minutes and shows an error code. We have left it off rather than restarting it repeatedly.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Resolved",
+        "age_weight": 6903
+      }
+    },
+    {
+      "name": "Nandini Shah",
+      "email": "24054031@kiit.ac.in",
+      "password": "Demo!QC6.31a",
+      "hostel_block": "QC-6",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "The mess notice board and the food served at dinner showed different menus yesterday. Please update the board before service so students can plan around dietary needs.",
+        "floor": "3",
+        "room_no": "321",
+        "status": "Open",
+        "age_weight": 7184
+      }
+    },
+    {
+      "name": "Pallavi Bose",
+      "email": "24054032@kiit.ac.in",
+      "password": "Demo!QC7.32a",
+      "hostel_block": "QC-7",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The room-temperature water outlet on the ground floor is leaking continuously. The lever does not return to its closed position after use.",
+        "floor": "4",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 7487
+      }
+    },
+    {
+      "name": "Riya Mishra",
+      "email": "24054033@kiit.ac.in",
+      "password": "Demo!QC8.33a",
+      "hostel_block": "QC-8",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "The cleaning supplies left beside the second-floor washroom are blocking part of the passage. Please move them to the designated storage area after cleaning.",
+        "floor": "1",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 7732
+      }
+    },
+    {
+      "name": "Saanvi Roy",
+      "email": "24054034@kiit.ac.in",
+      "password": "Demo!QC9.34a",
+      "hostel_block": "QC-9",
+      "ticket": {
+        "category": "Other",
+        "description": "The ceiling fan over the centre table in the reading room is wobbling noticeably. It has been switched off; please check the mount and blades.",
+        "floor": "2",
+        "room_no": "224",
+        "status": "In Progress",
+        "age_weight": 8033
+      }
+    },
+    {
+      "name": "Tara Iyer",
+      "email": "24054035@kiit.ac.in",
+      "password": "Demo!QC10.35a",
+      "hostel_block": "QC-10",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "Room 407 receives a signal but the connection drops whenever the corridor door is shut. The issue affects both roommates and began after the router was moved.",
+        "floor": "3",
+        "room_no": null,
+        "status": "Resolved",
+        "age_weight": 8375
+      }
+    },
+    {
+      "name": "Zoya Khan",
+      "email": "24054036@kiit.ac.in",
+      "password": "Demo!QC11.36a",
+      "hostel_block": "QC-11",
+      "ticket": {
+        "category": "Mess Food",
+        "description": "The handwashing area outside the mess has no soap at either dispenser. Please refill both before the next lunch service.",
+        "floor": "4",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 8659
+      }
+    },
+    {
+      "name": "Aman Sethi",
+      "email": "24054037@kiit.ac.in",
+      "password": "Demo!KP1.37a",
+      "hostel_block": "KP-1",
+      "ticket": {
+        "category": "Water Purifier",
+        "description": "The first-floor purifier has been making a continuous alarm sound since this morning. The display asks for service and students are avoiding the unit.",
+        "floor": "1",
+        "room_no": "127",
+        "status": "Open",
+        "age_weight": 9008
+      }
+    },
+    {
+      "name": "Soham Paul",
+      "email": "24054038@kiit.ac.in",
+      "password": "Demo!KP2.38a",
+      "hostel_block": "KP-2",
+      "ticket": {
+        "category": "Sanitation",
+        "description": "The drain near the common bathing area is clearing very slowly. Water starts pooling after two showers even though the surface grate has been cleaned.",
+        "floor": "2",
+        "room_no": null,
+        "status": "Open",
+        "age_weight": 9274
+      }
+    },
+    {
+      "name": "Aditi Bhat",
+      "email": "24054039@kiit.ac.in",
+      "password": "Demo!QC1.39a",
+      "hostel_block": "QC-1",
+      "ticket": {
+        "category": "Other",
+        "description": "The lock on the cupboard provided with room 231 is jammed. The key turns only halfway and the cupboard cannot be secured; please arrange a maintenance visit.",
+        "floor": "3",
+        "room_no": null,
+        "status": "In Progress",
+        "age_weight": 9581
+      }
+    },
+    {
+      "name": "Shreya Jain",
+      "email": "24054040@kiit.ac.in",
+      "password": "Demo!QC2.40a",
+      "hostel_block": "QC-2",
+      "ticket": {
+        "category": "Wi-Fi",
+        "description": "The second-floor study room has a working connection near the door but no signal at the rear tables. Please check the coverage before the evening study hours.",
+        "floor": "4",
+        "room_no": "430",
+        "status": "Resolved",
+        "age_weight": 9893
+      }
+    }
+  ],
+  "staff": [
+    {
+      "name": "Demo KP Warden",
+      "email": "hostelcare.demo.kp@gmail.com",
+      "password": "Demo!Staff.KP.42",
+      "role": "warden"
+    },
+    {
+      "name": "Demo QC Warden",
+      "email": "hostelcare.demo.qc@gmail.com",
+      "password": "Demo!Staff.QC.73",
+      "role": "warden"
+    },
+    {
+      "name": "Demo Campus Admin",
+      "email": "hostelcare.demo.admin@gmail.com",
+      "password": "Demo!Admin.Campus.91",
+      "role": "admin"
+    }
+  ]
+}

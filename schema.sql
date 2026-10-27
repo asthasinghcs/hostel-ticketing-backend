@@ -53,3 +53,20 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_tickets_block_status ON tickets(hostel_block, status, created_at);
 CREATE INDEX IF NOT EXISTS idx_comments_ticket ON comments(ticket_id, created_at);
+
+CREATE TABLE IF NOT EXISTS demo_batches (
+    id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    anchor_at TEXT NOT NULL,
+    ticket_count INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS ticket_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ticket_id INTEGER NOT NULL REFERENCES tickets(id),
+    actor_id INTEGER REFERENCES users(id),
+    event_type TEXT NOT NULL CHECK(event_type IN ('created','status_changed')),
+    from_status TEXT,
+    to_status TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_events_ticket_time ON ticket_events(ticket_id, created_at, id);
