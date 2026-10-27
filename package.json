@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@neon/config": "^1.9.5",
+    "@neon/env": "^1.6.6"
+  },
+  "name": "hostel-ticketing-backend",
+  "private": true,
+  "scripts": {
+    "build": "python -m py_compile app.py database.py postgres.py migrate_postgres.py",
+    "start": "python app.py",
+    "neon:deploy": "npx neon@latest deploy"
+  }
+}

@@ -14,6 +14,8 @@ from datetime import timedelta
 from werkzeug.security import generate_password_hash
 
 _boot = tempfile.TemporaryDirectory(dir=os.environ.get("HOSTEL_TEST_TMP"))
+os.environ['DATABASE_URL'] = ''
+os.environ['DATABASE_URL_UNPOOLED'] = ''
 os.environ['DATABASE_PATH'] = str(Path(_boot.name) / 'bootstrap.db')
 from app import app, get_db, init_db, timestamp, utcnow
 

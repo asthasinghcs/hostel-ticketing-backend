@@ -15,9 +15,14 @@ from flask_cors import CORS
 from werkzeug.exceptions import Forbidden, HTTPException, NotFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from dotenv import load_dotenv
+
 from database import initialize_database
 
 ROOT = Path(__file__).resolve().parent
+# Deployment environment wins; Neon CLI local files are loaded for development.
+load_dotenv(ROOT / ".env.local", override=False)
+load_dotenv(ROOT / ".env", override=False)
 HOSTEL_GROUPS = json.loads((ROOT / "hostels.json").read_text(encoding="utf-8"))["groups"]
 BLOCKS = tuple(block for group in HOSTEL_GROUPS for block in group["hostels"])
 CAMPUS_TZ = timezone(timedelta(hours=5, minutes=30))
@@ -48,17 +53,26 @@ def get_db():
 
 
 def init_db():
-    """Add missing tables/indexes; never drop or reseed existing data."""
-    db = get_db()
-    initialize_database(db)
-    if app.config["DATABASE_URL"] and os.environ.get("DATABASE_IMPORT_B64"):
-        from migrate_postgres import import_snapshot
-        import_snapshot(db, os.environ["DATABASE_IMPORT_B64"])
-    if os.environ.get("DATABASE_MIGRATE_TARGET_URL"):
-        if os.environ.get("READ_ONLY_MODE") != "1" or not app.config["DATABASE_URL"]:
-            raise ValueError("Hosted migration requires PostgreSQL and READ_ONLY_MODE=1.")
-        from migrate_postgres import migrate_connection
-        migrate_connection(db, os.environ["DATABASE_MIGRATE_TARGET_URL"])
+    """Initialize through a direct connection; preserve the pooled URL for requests."""
+    direct = app.config["DATABASE_URL_UNPOOLED"] if app.config["DATABASE_URL"] else ""
+    if direct:
+        from postgres import Connection
+        db = Connection(direct)
+    else:
+        db = get_db()
+    try:
+        initialize_database(db)
+        if app.config["DATABASE_URL"] and os.environ.get("DATABASE_IMPORT_B64"):
+            from migrate_postgres import import_snapshot
+            import_snapshot(db, os.environ["DATABASE_IMPORT_B64"])
+        if os.environ.get("DATABASE_MIGRATE_TARGET_URL"):
+            if os.environ.get("READ_ONLY_MODE") != "1" or not app.config["DATABASE_URL"]:
+                raise ValueError("Hosted migration requires PostgreSQL and READ_ONLY_MODE=1.")
+            from migrate_postgres import migrate_connection
+            migrate_connection(db, os.environ["DATABASE_MIGRATE_TARGET_URL"])
+    finally:
+        if direct:
+            db.close()
 
 
 def public_user(row):
@@ -165,7 +179,7 @@ def ticket_dict(row):
 
 
 app = Flask(__name__)
-app.config.update(DATABASE_URL=os.environ.get("DATABASE_URL", ""), DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db")), MAX_CONTENT_LENGTH=32 * 1024)
+app.config.update(DATABASE_URL_UNPOOLED=os.environ.get("DATABASE_URL_UNPOOLED", ""), DATABASE_URL=os.environ.get("DATABASE_URL", ""), DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db")), MAX_CONTENT_LENGTH=32 * 1024)
 CORS(app, resources={r"/api/*": {"origins": [origin.strip() for origin in os.environ.get(
     "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,https://hostel-ticketing-frontend-17du.onrender.com"
 ).split(",") if origin.strip()]}}, allow_headers=["Content-Type", "Authorization"])
