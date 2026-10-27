@@ -5,6 +5,9 @@ ROOT = Path(__file__).resolve().parent
 
 
 def initialize_database(connection):
+    if getattr(connection, "dialect", "sqlite") == "postgres":
+        connection.executescript((ROOT / "schema.postgres.sql").read_text(encoding="utf-8"))
+        return
     connection.execute("PRAGMA foreign_keys = ON")
     connection.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
     for table in ("users", "tickets"):

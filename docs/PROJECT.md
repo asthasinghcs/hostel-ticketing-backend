@@ -2,7 +2,7 @@
 
 Updated: 27 October 2026
 
-This guide describes the repaired local implementation of the hostel grievance and maintenance system. It covers architecture, permissions, setup, API contracts, data migration, verification, and deployment. Code and documentation are versioned together on the review branch codex/hostel-access-redesign. Render deployment is a separate operation.
+This guide describes the repaired implementation of the hostel grievance and maintenance system. It covers architecture, permissions, setup, API contracts, data migration, verification, and deployment. Code and documentation are versioned together in both GitHub repositories.
 
 ## Repair summary
 
@@ -100,6 +100,7 @@ Environment variables:
 
 | Variable | Meaning |
 | --- | --- |
+| DATABASE_URL | Private PostgreSQL URL on Render; takes precedence over SQLite |
 | DATABASE_PATH | SQLite file; defaults to hostel_ticketing.db beside app.py |
 | FRONTEND_ORIGINS | Comma-separated exact allowed frontend origins, without trailing slashes |
 | PORT | Development server port; defaults to 5000 |
@@ -267,9 +268,9 @@ Backend configuration:
 - Start: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1
 - Health path: /api/health
 - FRONTEND_ORIGINS: https://hostel-ticketing-frontend-17du.onrender.com
-- DATABASE_PATH: an absolute path on a persistent disk, for example /var/data/hostel_ticketing.db
+- DATABASE_URL: the internal connection URL from the Render PostgreSQL database
 
-A persistent disk must be configured in the hosting account; merely setting DATABASE_PATH does not provision storage. Keep the deployment on one service instance while using SQLite.
+The free Render backend uses managed PostgreSQL because service-local files are ephemeral. SQLite remains available for local development.
 
 Frontend configuration:
 
@@ -281,22 +282,22 @@ Vite embeds its API URL during the build, so changing it requires rebuilding the
 
 Release procedure:
 
-1. Back up the deployed SQLite database using SQLite's backup facility, or stop writes before copying the database file.
-2. Review existing staff roles and replace public demo credentials before exposing a real service.
-3. Prepare persistent storage, migrate the existing database file to that location, and set DATABASE_PATH.
-4. Deploy source with the database excluded from Git; keep the actual database on persistent storage.
-5. Deploy the backend. Startup initializes missing tables safely; do not put seed.py in a build or start command.
-6. Provision required real staff accounts through manage.py.
-7. Deploy the frontend with the correct VITE_API_URL.
-8. Verify signup/login, refresh, student ticket creation, voting, comments, warden scope, status changes, and logout using an authorized test account.
+1. Render backend uses DATABASE_URL for private PostgreSQL. Without it, local development uses DATABASE_PATH (SQLite).
+2. Keep database URLs and migration snapshots out of Git. The frontend only receives the public VITE_API_URL.
+3. Startup creates missing PostgreSQL tables without dropping records. SQLite initialization retains its existing migration behavior.
+4. For an existing local dataset, run `python migrate_postgres.py hostel_ticketing.db <private-output-path>`. The export is a compressed private snapshot, excluding sessions.
+5. Set DATABASE_IMPORT_B64 to that file's contents in the backend's private Render environment for the first deployment. The import only accepts an empty database, verifies every copied row, and records a content hash to prevent replay. It rolls back on failure and serializes concurrent startup imports. IDs and password hashes are preserved; users sign in again.
+6. After verifying the deployment, clear DATABASE_IMPORT_B64 and delete the temporary local snapshot. Do not run seed.py in a build or start command.
+7. Backend build: `pip install -r requirements.txt`; start: `gunicorn app:app`. Frontend build: `npm install` then `npm run build`; publish directory: `dist`.
+8. Verify `/api/health`, login, student hostel isolation, staff totals, and date filters at the public URLs.
 
-Changes are stored on a review branch. No Render settings or live records were changed. Deployment remains a separate operation.
+The selected free PostgreSQL instance is in Ohio in the SE project workspace. Its dashboard expiry is 26 November 2026. Export or move the database before expiry to retain records. Free web-service files remain ephemeral; application data lives in Postgres.
 
 ## Verification and scope
 
 Automated checks:
 
-- 35 backend tests: auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, QC/high-numbered hostel coverage, roll-email validation, inclusive India-time date filtering, real status history, synthetic fixture uniqueness, append/idempotency/collision safety, author email privacy, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
+- 37 backend tests (including private snapshot preservation and session exclusion): auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, QC/high-numbered hostel coverage, roll-email validation, inclusive India-time date filtering, real status history, synthetic fixture uniqueness, append/idempotency/collision safety, author email privacy, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
 - 14 frontend tests: catalogue coverage, India-time calendar boundaries, four search/filter/count-preservation checks, and eight API-client checks covering bearer headers, public login behavior, expired-session handling, stale 401 protection, network errors, non-JSON failures, cancellation, and timeouts.
 - Frontend lint and production build pass.
 

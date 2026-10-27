@@ -37,9 +37,13 @@ def timestamp(value):
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(app.config["DATABASE"], timeout=15)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        if app.config["DATABASE_URL"]:
+            from postgres import Connection
+            g.db = Connection(app.config["DATABASE_URL"])
+        else:
+            g.db = sqlite3.connect(app.config["DATABASE"], timeout=15)
+            g.db.row_factory = sqlite3.Row
+            g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
 
 
@@ -47,6 +51,9 @@ def init_db():
     """Add missing tables/indexes; never drop or reseed existing data."""
     db = get_db()
     initialize_database(db)
+    if app.config["DATABASE_URL"] and os.environ.get("DATABASE_IMPORT_B64"):
+        from migrate_postgres import import_snapshot
+        import_snapshot(db, os.environ["DATABASE_IMPORT_B64"])
 
 
 def public_user(row):
@@ -153,7 +160,7 @@ def ticket_dict(row):
 
 
 app = Flask(__name__)
-app.config.update(DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db")), MAX_CONTENT_LENGTH=32 * 1024)
+app.config.update(DATABASE_URL=os.environ.get("DATABASE_URL", ""), DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db")), MAX_CONTENT_LENGTH=32 * 1024)
 CORS(app, resources={r"/api/*": {"origins": [origin.strip() for origin in os.environ.get(
     "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,https://hostel-ticketing-frontend-17du.onrender.com"
 ).split(",") if origin.strip()]}}, allow_headers=["Content-Type", "Authorization"])
@@ -321,7 +328,7 @@ def get_tickets():
     date_query, date_params = date_clause("t.")
     query += date_query
     params.extend(date_params)
-    rows = get_db().execute(query + " GROUP BY t.id ORDER BY t.created_at DESC, t.id DESC", params).fetchall()
+    rows = get_db().execute(query + " GROUP BY t.id, owner.name, owner.email ORDER BY t.created_at DESC, t.id DESC", params).fetchall()
     tickets = [ticket_dict(row) for row in rows]
     if sort == "votes":
         tickets.sort(key=lambda ticket: ticket["vote_count"], reverse=True)
