@@ -265,8 +265,8 @@ Both repositories must be deployed together because the API now requires authent
 Backend configuration:
 
 - Build: python -m pip install -r requirements.txt
-- Start: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1
-- Health path: /api/health
+- Start: gunicorn app:app (Render supplies PORT and one worker)
+- Verified health endpoint: /api/health
 - FRONTEND_ORIGINS: https://hostel-ticketing-frontend-17du.onrender.com
 - DATABASE_URL: the internal connection URL from the Render PostgreSQL database
 
@@ -274,7 +274,7 @@ The free Render backend uses managed PostgreSQL because service-local files are 
 
 Frontend configuration:
 
-- Build: npm ci && npm run build
+- Build: npm install; npm run build
 - Publish directory: dist
 - VITE_API_URL: https://hostel-ticketing-backend.onrender.com
 
@@ -324,3 +324,20 @@ This remains a small hostel application. Password reset, email verification, not
 The 40-row demo reference was imported at 2026-10-27 09:54:35 UTC. Its campus-date distribution is 21 Oct: 5; 22 Oct: 5; 23 Oct: 6; 24 Oct: 5; 25 Oct: 6; 26 Oct: 6; 27 Oct: 7. The batch contains 40 distinct numeric student emails and 40 distinct student passwords. Existing rows were compared before and after import and retained unchanged. Git tracks only the synthetic fixtures and documentation, not the local database or backup.
 
 Browser verification of this update confirmed QC-1 login with a numeric student email, QC-only ticket content, timestamped creation/progress history, staff access to all 36 hostels, 60 all-time tickets, exactly 40 grievances in 21–27 October, and selection of 26 October reducing the view and totals to six tickets.
+
+
+## Deployment verification — 27 October 2026
+
+Both repositories were released to main and deployed to the existing Render services in the SE project workspace:
+
+- Frontend: https://hostel-ticketing-frontend-17du.onrender.com/ — deploy dep-dbgb07k9v7es73e9f1h0, source 04360767e82459d9b9f497663bff7640ca7aeaeb.
+- Backend: https://hostel-ticketing-backend.onrender.com/api/health — source 89f284c66f423e76d5e11e6b5a6d34908a4dcda3; initial deploy dep-dbgb07brjlhs73d1i2ug.
+- Storage: private PostgreSQL 17 in Ohio, instance hostel-ticketing-db. No external database access was enabled.
+
+The existing local dataset (56 accounts and 60 tickets, including the 40 labelled demo grievances) was transferred through the backend's private environment. The import compared all rows in users, tickets, votes, comments, demo_batches and ticket_events, preserved IDs and password hashes, and excluded sessions. A transaction exercised PostgreSQL ticket/comment/vote/event inserts and rolled back the probe records.
+
+The temporary migration payload was then cleared from the backend environment. A second deployment, dep-dbgb11qvcj2c73bmcj30, became live without the payload. The dataset survived this redeployment.
+
+Public API verification after deployment confirmed health, CORS, 36 configured hostels, 60 all-time tickets, 40 tickets across 21–27 October, six on 26 October, timestamped history, QC-1-only student access and HTTP 403 for a student's KP-1 request. Staff access spans all 36 hostels. The public frontend was also checked in the browser and displayed the 60-ticket total.
+
+The selected free Postgres database expires on 26 November 2026. Export or migrate it before that date. Free web services can sleep when idle, so the first request after inactivity can take longer.
