@@ -181,7 +181,7 @@ def ticket_dict(row):
 app = Flask(__name__)
 app.config.update(DATABASE_URL_UNPOOLED=os.environ.get("DATABASE_URL_UNPOOLED", ""), DATABASE_URL=os.environ.get("DATABASE_URL", ""), DATABASE=os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db")), MAX_CONTENT_LENGTH=32 * 1024)
 CORS(app, resources={r"/api/*": {"origins": [origin.strip() for origin in os.environ.get(
-    "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,https://hostel-ticketing-frontend-17du.onrender.com"
+    "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,https://hostelgrievance.onrender.com,https://hostel-ticketing-frontend-17du.onrender.com"
 ).split(",") if origin.strip()]}}, allow_headers=["Content-Type", "Authorization"])
 
 

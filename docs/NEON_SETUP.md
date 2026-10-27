@@ -2,7 +2,7 @@
 
 ## Active hosting
 
-- Website: https://hostel-ticketing-frontend-17du.onrender.com/
+- Website: https://hostelgrievance.onrender.com/
 - API: https://hostel-ticketing-backend.onrender.com/
 - Database: Neon project `polished-union-24877324` (SE project), organization `org-rough-paper-30136928`, branch `production` (`br-solitary-recipe-b5azjxug`), AWS Ohio, PostgreSQL 18.
 - The project was verified as `free_v3`. Only PostgreSQL is used. The existing Flask authentication stays in place.

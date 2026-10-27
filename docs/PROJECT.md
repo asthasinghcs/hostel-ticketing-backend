@@ -267,7 +267,7 @@ Backend configuration:
 - Build: python -m pip install -r requirements.txt
 - Start: gunicorn app:app (Render supplies PORT and one worker)
 - Verified health endpoint: /api/health
-- FRONTEND_ORIGINS: https://hostel-ticketing-frontend-17du.onrender.com
+- FRONTEND_ORIGINS: https://hostelgrievance.onrender.com
 - DATABASE_URL: the pooled Neon PostgreSQL connection URL
 - DATABASE_URL_UNPOOLED: the direct Neon connection URL for initialization
 
@@ -331,7 +331,7 @@ Browser verification of this update confirmed QC-1 login with a numeric student 
 
 Both repositories were released to main and deployed to the existing Render services in the SE project workspace:
 
-- Frontend: https://hostel-ticketing-frontend-17du.onrender.com/ — deploy dep-dbgb07k9v7es73e9f1h0, source 04360767e82459d9b9f497663bff7640ca7aeaeb.
+- Original frontend: https://hostel-ticketing-frontend-17du.onrender.com/ — deploy dep-dbgb07k9v7es73e9f1h0, source 04360767e82459d9b9f497663bff7640ca7aeaeb.
 - Backend: https://hostel-ticketing-backend.onrender.com/api/health — source 89f284c66f423e76d5e11e6b5a6d34908a4dcda3; initial deploy dep-dbgb07brjlhs73d1i2ug.
 - Storage: private PostgreSQL 17 in Ohio, instance hostel-ticketing-db. No external database access was enabled.
 
@@ -361,3 +361,8 @@ The migration helper transfers only the application's known tables, preserving I
 ## Current Neon deployment
 
 On 27 October 2026 the live dataset was copied and verified on Neon, then the Render backend was switched to Neon. All 56 accounts and 60 tickets were preserved. The app no longer relies on the Render database expiry. Full CLI results, connection wiring, row counts, build/test output and end-to-end verification are recorded in [NEON_SETUP.md](NEON_SETUP.md).
+
+
+## Clean public address
+
+The primary frontend address is https://hostelgrievance.onrender.com/ . Render static site srv-dbgbs2bl550s738h251g was created from the same frontend main branch; deployment dep-dbgbs2jl550s738h25gg became live on 27 October 2026. The legacy frontend remains available at https://hostel-ticketing-frontend-17du.onrender.com/ (service label hostelcare-legacy). Both use the existing Flask API and the same Neon database. No custom domain was purchased and no second ticket database was created. The backend CORS configuration permits both frontend origins. Live verification reconfirmed student isolation, staff access, 60 tickets and date totals using the new origin.

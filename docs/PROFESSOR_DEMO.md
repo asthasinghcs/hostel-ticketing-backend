@@ -1,6 +1,6 @@
 # Professor demonstration — HostelCare
 
-Open https://hostel-ticketing-frontend-17du.onrender.com/ . These are synthetic project-demo accounts, not real student identities or functioning email inboxes. Passwords below are intentionally public test credentials.
+Open https://hostelgrievance.onrender.com/ . These are synthetic project-demo accounts, not real student identities or functioning email inboxes. Passwords below are intentionally public test credentials.
 
 ## Quick logins
 
