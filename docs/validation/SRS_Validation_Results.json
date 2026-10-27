@@ -1,0 +1,288 @@
+{
+  "date": "2026-10-27",
+  "database": "isolated temporary SQLite",
+  "passed": 40,
+  "total": 40,
+  "checks": [
+    {
+      "id": "BV01",
+      "parameter": "{'email': '24054001@kiit.ac.in'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV02",
+      "parameter": "{'email': 'student@gmail.com'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV03",
+      "parameter": "{'email': 'student@kiit.ac.in'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV04",
+      "parameter": "{'email': '24054001@kiit.ac.in.evil.com'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV05",
+      "parameter": "{'email': '24054001@other.ac.in'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV06",
+      "parameter": "{'email': '12345@kiit.ac.in'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV07",
+      "parameter": "{'email': '123456@kiit.ac.in'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV08",
+      "parameter": "{'email': '123456789012@kiit.ac.in'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV09",
+      "parameter": "{'email': '1234567890123@kiit.ac.in'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV10",
+      "parameter": "{'email': '24054002@KIIT.AC.IN'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV11",
+      "parameter": "{'password': 'length 7'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV12",
+      "parameter": "{'password': 'length 8'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV13",
+      "parameter": "{'password': 'length 128'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV14",
+      "parameter": "{'password': 'length 129'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV15",
+      "parameter": "{'name': 'length 0'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV16",
+      "parameter": "{'name': 'length 100'}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV17",
+      "parameter": "{'name': 'length 101'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV18",
+      "parameter": "{'email': '24054001@kiit.ac.in'}",
+      "expected": 409,
+      "actual": 409,
+      "passed": true
+    },
+    {
+      "id": "BV19",
+      "parameter": "{'role': 'admin'}",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "id": "BV20",
+      "parameter": "{'hostel_block': 'KP-99'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV21",
+      "parameter": "{}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV22",
+      "parameter": "{'description': 0}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV23",
+      "parameter": "{'description': 4000}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV24",
+      "parameter": "{'description': 4001}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV25",
+      "parameter": "{'category': 'Unsupported'}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV26",
+      "parameter": "{'floor': 30, 'room_no': 30}",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV27",
+      "parameter": "{'floor': 31}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV28",
+      "parameter": "{'room_no': 31}",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV29",
+      "parameter": "{'hostel_block': 'KP-2'}",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "id": "BV30",
+      "parameter": "Other hostel filter",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "id": "BV31",
+      "parameter": "Missing bearer token",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "id": "BV32",
+      "parameter": "First own-hostel vote",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV33",
+      "parameter": "Duplicate vote",
+      "expected": 409,
+      "actual": 409,
+      "passed": true
+    },
+    {
+      "id": "BV34",
+      "parameter": "Student status update",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "id": "BV35",
+      "parameter": "Comment length 0",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV36",
+      "parameter": "Comment length 2000",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "id": "BV37",
+      "parameter": "Comment length 2001",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV38",
+      "parameter": "Reversed dates",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV39",
+      "parameter": "Impossible date",
+      "expected": 400,
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "id": "BV40",
+      "parameter": "Valid inclusive date range",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    }
+  ]
+}

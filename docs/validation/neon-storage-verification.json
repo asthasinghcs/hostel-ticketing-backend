@@ -1,0 +1,15 @@
+{
+  "project": "polished-union-24877324",
+  "branch": "production",
+  "tables": {
+    "users": 56,
+    "tickets": 60,
+    "votes": 59,
+    "comments": 24,
+    "demo_batches": 1,
+    "ticket_events": 84
+  },
+  "all_rows_match_import_digest": true,
+  "postgresql_write_probe_rolled_back": true,
+  "tls": true
+}

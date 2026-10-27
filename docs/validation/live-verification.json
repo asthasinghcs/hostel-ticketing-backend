@@ -1,0 +1,46 @@
+{
+  "health": {
+    "status": "ok"
+  },
+  "hostels": 36,
+  "student_scope": {
+    "hostel": "QC-1",
+    "tickets": 2
+  },
+  "other_hostel_access": 403,
+  "staff_total": 60,
+  "staff_hostels": 36,
+  "recent_tickets": 40,
+  "by_date": [
+    {
+      "date": "2026-10-21",
+      "total": 5
+    },
+    {
+      "date": "2026-10-22",
+      "total": 5
+    },
+    {
+      "date": "2026-10-23",
+      "total": 6
+    },
+    {
+      "date": "2026-10-24",
+      "total": 5
+    },
+    {
+      "date": "2026-10-25",
+      "total": 6
+    },
+    {
+      "date": "2026-10-26",
+      "total": 6
+    },
+    {
+      "date": "2026-10-27",
+      "total": 7
+    }
+  ],
+  "single_day_tickets": 6,
+  "history_events": 1
+}
