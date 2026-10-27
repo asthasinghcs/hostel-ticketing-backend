@@ -8,14 +8,14 @@
 - 40 new grievances, each linked to a different student with a unique numeric roll-number email and a unique password.
 - 24 Open, 8 In Progress, and 8 Resolved.
 - The sample dates cover 21–27 October 2026 in Asia/Kolkata (IST).
-- Local import retained the previous 20 grievances and appended 40, for 60 total.
+- The deployed reference import retained the previous 20 grievances and appended 40, for 60 total.
 - Every synthetic ticket has a Demo label and the API exposes is_demo=true.
 
 ## Student logins
 
 Select Student, choose KP or QC, choose the exact hostel, then sign in. New student registrations must use 6–12 digits followed by @kiit.ac.in. Existing legacy accounts retain their prior logins.
 
-| Name | Hostel | Email | Demo password | Ticket in local sample | Raised (IST) |
+| Name | Hostel | Email | Demo password | Ticket in deployed reference sample | Raised (IST) |
 | --- | --- | --- | --- | --- | --- |
 | Aarav Mehta | KP-1 | 24054001@kiit.ac.in | `Demo!KP1.01a` | HC-021 | 27 Oct 2026, 15:03 |
 | Ishaan Sinha | KP-2 | 24054002@kiit.ac.in | `Demo!KP2.02a` | HC-022 | 27 Oct 2026, 14:09 |
@@ -100,4 +100,4 @@ python seed.py --as-of 2026-10-27T09:54:35Z
 
 The loader distributes dates across seven campus calendar dates ending at the seed anchor. A previously imported batch keeps its original dates. The JSON fixture contains relative age weights; recent-grievances.sample.json records the concrete dated sample. Ticket IDs can differ in a fresh database.
 
-The database and its backup stay out of Git. The fixture, account guide, example snapshot, migration code, and tests are versioned. Importing the fixture into a hosted database requires running the seed command there; pushing source does not change hosted records.
+The database and its backup stay out of Git. The fixture, account guide, example snapshot, migration code, and tests are versioned. The current public Render application already contains the reference dataset. For a new hosted database, use the documented controlled import or migration; pushing source alone does not populate records. See [the professor demo walkthrough](PROFESSOR_DEMO.md).

@@ -54,6 +54,11 @@ def init_db():
     if app.config["DATABASE_URL"] and os.environ.get("DATABASE_IMPORT_B64"):
         from migrate_postgres import import_snapshot
         import_snapshot(db, os.environ["DATABASE_IMPORT_B64"])
+    if os.environ.get("DATABASE_MIGRATE_TARGET_URL"):
+        if os.environ.get("READ_ONLY_MODE") != "1" or not app.config["DATABASE_URL"]:
+            raise ValueError("Hosted migration requires PostgreSQL and READ_ONLY_MODE=1.")
+        from migrate_postgres import migrate_connection
+        migrate_connection(db, os.environ["DATABASE_MIGRATE_TARGET_URL"])
 
 
 def public_user(row):
@@ -164,6 +169,17 @@ app.config.update(DATABASE_URL=os.environ.get("DATABASE_URL", ""), DATABASE=os.e
 CORS(app, resources={r"/api/*": {"origins": [origin.strip() for origin in os.environ.get(
     "FRONTEND_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,https://hostel-ticketing-frontend-17du.onrender.com"
 ).split(",") if origin.strip()]}}, allow_headers=["Content-Type", "Authorization"])
+
+
+@app.before_request
+def migration_read_only():
+    if (os.environ.get("READ_ONLY_MODE") == "1" and request.path.startswith("/api/")
+            and request.method not in ("GET", "HEAD", "OPTIONS")
+            and request.path not in ("/api/login", "/api/logout")):
+        response = jsonify(error="Tickets are briefly read-only while storage is being migrated. Please retry shortly.")
+        response.status_code = 503
+        response.headers["Retry-After"] = "60"
+        return response
 
 
 @app.teardown_appcontext
@@ -474,7 +490,7 @@ def stats():
 @app.get("/api/overview")
 @authenticated()
 def overview():
-    # One SQLite read snapshot keeps the list and its counters consistent.
+    # One database read snapshot keeps the list and its counters consistent.
     db = get_db()
     db.execute("BEGIN")
     return jsonify(tickets=get_tickets(), stats=get_stats(), updated_at=timestamp(utcnow()) + "Z")

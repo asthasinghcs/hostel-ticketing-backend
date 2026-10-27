@@ -39,6 +39,19 @@ class ApiTests(unittest.TestCase):
         self.student = self.signup('24059901@kiit.ac.in', 'KP-1')
         self.other = self.signup('24059902@kiit.ac.in', 'KP-2')
 
+    def test_migration_read_only_preserves_reads_and_blocks_ticket_writes(self):
+        ticket = self.ticket()
+        with patch.dict(os.environ, {'READ_ONLY_MODE': '1'}):
+            response = self.client.post('/api/tickets', json=dict(category='Wi-Fi', description='Another outage', hostel_block='KP-1'), headers=self.auth(self.student))
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.headers['Retry-After'], '60')
+            response = self.client.get('/api/overview', headers=self.auth(self.student))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json['stats']['total'], 1)
+            self.assertEqual(response.json['tickets'][0]['id'], ticket['id'])
+            self.assertEqual(self.client.get('/api/health').status_code, 200)
+            self.assertEqual(self.client.post('/api/logout', json={}, headers=self.auth(self.student)).status_code, 200)
+
     def tearDown(self):
         self.tmp.cleanup()
 

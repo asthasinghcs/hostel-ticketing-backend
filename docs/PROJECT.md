@@ -297,7 +297,7 @@ The selected free PostgreSQL instance is in Ohio in the SE project workspace. It
 
 Automated checks:
 
-- 37 backend tests (including private snapshot preservation and session exclusion): auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, QC/high-numbered hostel coverage, roll-email validation, inclusive India-time date filtering, real status history, synthetic fixture uniqueness, append/idempotency/collision safety, author email privacy, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
+- 38 backend tests (including private snapshot preservation, session exclusion and migration read-only behavior): auth requirements, signup contract, session expiry/revocation, credential failures, legacy-hash migration, forged user IDs, role enforcement, student hostel isolation, staff access across hostels, portal validation, counter increments, QC/high-numbered hostel coverage, roll-email validation, inclusive India-time date filtering, real status history, synthetic fixture uniqueness, append/idempotency/collision safety, author email privacy, vote uniqueness, comments, validation, missing records, overdue behavior, filters, stats, safe initialization, seed refusal, staff provisioning, and CORS.
 - 14 frontend tests: catalogue coverage, India-time calendar boundaries, four search/filter/count-preservation checks, and eight API-client checks covering bearer headers, public login behavior, expired-session handling, stale 401 protection, network errors, non-JSON failures, cancellation, and timeouts.
 - Frontend lint and production build pass.
 
@@ -341,3 +341,17 @@ The temporary migration payload was then cleared from the backend environment. A
 Public API verification after deployment confirmed health, CORS, 36 configured hostels, 60 all-time tickets, 40 tickets across 21–27 October, six on 26 October, timestamped history, QC-1-only student access and HTTP 403 for a student's KP-1 request. Staff access spans all 36 hostels. The public frontend was also checked in the browser and displayed the 60-ticket total.
 
 The selected free Postgres database expires on 26 November 2026. Export or migrate it before that date. Free web services can sleep when idle, so the first request after inactivity can take longer.
+
+
+## Moving the hosted database to another free PostgreSQL provider
+
+Migration preparation is included in the source; provider cutover must be verified separately. No credentials are stored in Git.
+
+1. Create an empty PostgreSQL 17 database on the intended provider's $0 plan. Preserve the current Render database.
+2. Deploy this source, then set READ_ONLY_MODE=1 on the Render backend and wait for that deployment to become live. Reads/login/logout continue; signup and ticket/vote/comment/status writes return a temporary 503 with Retry-After.
+3. Set DATABASE_MIGRATE_TARGET_URL to the destination's TLS-enabled direct connection URL in the backend's private environment. Wait for the next deployment. Startup copies a consistent snapshot directly from the current private database, excluding sessions. The target must be empty, or match an already completed import digest. The copied rows are checked before commit.
+4. Verify destination counts, relationships and demo account hashes without printing credentials. Compare with the source snapshot. Keep writes paused until cutover.
+5. Set DATABASE_URL to the destination URL, clear DATABASE_MIGRATE_TARGET_URL, and set READ_ONLY_MODE=0 together. Wait for the backend deployment, then recheck health, student/warden login, hostel scope and date counts. Existing sessions require a fresh login.
+6. Record the provider and verified deployment here. Retain the previous database until the destination has been verified. Do not delete it during a demonstration.
+
+The migration helper transfers only the application's known tables, preserving IDs, hashes, dates and data. It is intended for this small application, not a general PostgreSQL schema backup tool.

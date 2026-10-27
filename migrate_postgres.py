@@ -27,6 +27,31 @@ def export_snapshot(path):
     return base64.b64encode(zlib.compress(payload)).decode()
 
 
+def export_connection(source):
+    """Read the current hosted records in one consistent snapshot, without sessions."""
+    source.execute('BEGIN')
+    try:
+        tables = {table: [dict(row) for row in source.execute(f'SELECT * FROM {table} ORDER BY id').fetchall()]
+                  for table in TABLES}
+        payload = json.dumps({'version': 1, 'tables': tables}, sort_keys=True, separators=(',', ':')).encode()
+        return base64.b64encode(zlib.compress(payload)).decode()
+    finally:
+        source.rollback()
+
+
+def migrate_connection(source, target_url):
+    """Transfer a hosted snapshot privately; leave the source untouched."""
+    from postgres import Connection
+    from database import initialize_database
+    encoded = export_connection(source)
+    target = Connection(target_url)
+    try:
+        initialize_database(target)
+        return import_snapshot(target, encoded)
+    finally:
+        target.close()
+
+
 def import_snapshot(db, encoded):
     if getattr(db, 'dialect', '') != 'postgres':
         raise ValueError('Snapshot import requires PostgreSQL.')

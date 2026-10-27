@@ -32,7 +32,7 @@ Passwords are entered privately through prompts. Public signup can create studen
 python -m unittest -v
 ```
 
-Thirty-seven tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
+Thirty-eight tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
 
 ## Deployment
 
@@ -49,3 +49,7 @@ The app supports 36 configured hostels: KP-1–KP-25 and QC-1–QC-11. New stude
 ## Render storage
 
 Set DATABASE_URL to the internal managed PostgreSQL URL in the backend environment. SQLite remains the local default. See [deployment and private migration instructions](docs/PROJECT.md#render-deployment). The selected free database expires on 26 November 2026; export or move it before then.
+
+## Professor demonstration
+
+Use [the quick professor demo guide](docs/PROFESSOR_DEMO.md) for verified mock logins, exact hostel choices, date filters, and the presentation walkthrough.

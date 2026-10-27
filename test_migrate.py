@@ -9,7 +9,7 @@ import tempfile
 import unittest
 import zlib
 from database import initialize_database
-from migrate_postgres import export_snapshot, TABLES
+from migrate_postgres import export_snapshot, export_connection, TABLES
 
 
 class SnapshotTests(unittest.TestCase):
@@ -31,6 +31,9 @@ class SnapshotTests(unittest.TestCase):
             self.assertEqual(snapshot['tables']['tickets'][0]['id'],1)
             with closing(sqlite3.connect(path)) as db:
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM sessions').fetchone()[0],1)
+                db.row_factory = sqlite3.Row
+                hosted = json.loads(zlib.decompress(base64.b64decode(export_connection(db))))
+                self.assertEqual(hosted, snapshot)
 
     def test_missing_source_is_not_created(self):
         with tempfile.TemporaryDirectory(dir=os.environ.get('HOSTEL_TEST_TMP')) as folder:
