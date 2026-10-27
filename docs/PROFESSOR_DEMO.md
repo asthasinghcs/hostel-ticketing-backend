@@ -34,4 +34,4 @@ Live database files, backups, sessions and hosting connection passwords are excl
 
 ## Hosting
 
-The public website and backend run on Render. See `docs/PROJECT.md` for the currently verified database provider and deployment status. While the free-hosting migration is pending, the active Render database expires on 26 November 2026. Do not treat migration as complete until the live verification is recorded there. A free backend can take longer to respond after inactivity; open it before the presentation.
+The public website and backend run on Render. See `docs/PROJECT.md` for the currently verified database provider and deployment status. The database migration to Neon completed and was verified on 27 October 2026. The app no longer depends on the Render database expiring on 26 November. See [Neon setup and proof](NEON_SETUP.md). A free backend can take longer to respond after inactivity; open it before the presentation.

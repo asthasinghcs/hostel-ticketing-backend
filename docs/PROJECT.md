@@ -105,7 +105,7 @@ Environment variables:
 | FRONTEND_ORIGINS | Comma-separated exact allowed frontend origins, without trailing slashes |
 | PORT | Development server port; defaults to 5000 |
 
-The backend .env.example is a configuration reference. The backend does not automatically load .env files; set variables in the shell or deployment environment.
+The backend loads ignored .env.local or .env files for local development; deployment environment variables take priority. .env.example is a configuration reference.
 
 ### Frontend
 
@@ -268,7 +268,8 @@ Backend configuration:
 - Start: gunicorn app:app (Render supplies PORT and one worker)
 - Verified health endpoint: /api/health
 - FRONTEND_ORIGINS: https://hostel-ticketing-frontend-17du.onrender.com
-- DATABASE_URL: the internal connection URL from the Render PostgreSQL database
+- DATABASE_URL: the pooled Neon PostgreSQL connection URL
+- DATABASE_URL_UNPOOLED: the direct Neon connection URL for initialization
 
 The free Render backend uses managed PostgreSQL because service-local files are ephemeral. SQLite remains available for local development.
 
@@ -291,7 +292,7 @@ Release procedure:
 7. Backend build: `pip install -r requirements.txt`; start: `gunicorn app:app`. Frontend build: `npm install` then `npm run build`; publish directory: `dist`.
 8. Verify `/api/health`, login, student hostel isolation, staff totals, and date filters at the public URLs.
 
-The selected free PostgreSQL instance is in Ohio in the SE project workspace. Its dashboard expiry is 26 November 2026. Export or move the database before expiry to retain records. Free web-service files remain ephemeral; application data lives in Postgres.
+The active database is Neon PostgreSQL on the free plan, project polished-union-24877324, production branch, in Ohio. The application no longer depends on the expiring Render database. See [Neon setup and verified cutover](NEON_SETUP.md). Free web-service files remain ephemeral; application data lives in Neon.
 
 ## Verification and scope
 
@@ -340,7 +341,7 @@ The temporary migration payload was then cleared from the backend environment. A
 
 Public API verification after deployment confirmed health, CORS, 36 configured hostels, 60 all-time tickets, 40 tickets across 21–27 October, six on 26 October, timestamped history, QC-1-only student access and HTTP 403 for a student's KP-1 request. Staff access spans all 36 hostels. The public frontend was also checked in the browser and displayed the 60-ticket total.
 
-The selected free Postgres database expires on 26 November 2026. Export or migrate it before that date. Free web services can sleep when idle, so the first request after inactivity can take longer.
+The initial Render database expires on 26 November 2026. This historical deployment was subsequently migrated to Neon; see [current setup](NEON_SETUP.md). Free web services can sleep when idle, so the first request after inactivity can take longer.
 
 
 ## Moving the hosted database to another free PostgreSQL provider
@@ -355,3 +356,8 @@ Migration preparation is included in the source; provider cutover must be verifi
 6. Record the provider and verified deployment here. Retain the previous database until the destination has been verified. Do not delete it during a demonstration.
 
 The migration helper transfers only the application's known tables, preserving IDs, hashes, dates and data. It is intended for this small application, not a general PostgreSQL schema backup tool.
+
+
+## Current Neon deployment
+
+On 27 October 2026 the live dataset was copied and verified on Neon, then the Render backend was switched to Neon. All 56 accounts and 60 tickets were preserved. The app no longer relies on the Render database expiry. Full CLI results, connection wiring, row counts, build/test output and end-to-end verification are recorded in [NEON_SETUP.md](NEON_SETUP.md).
