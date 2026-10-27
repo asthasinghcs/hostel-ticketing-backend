@@ -1,23 +1,41 @@
-# Hostel Grievance & Maintenance Ticketing — Backend
+# HostelCare — Backend
 
-## Setup
+Flask + SQLite API for hostel grievances, voting, discussions, sessions, and staff management.
+
+## Run locally
+
+Use Python 3.10+ (verified with Python 3.12.10).
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python app.py
 ```
-pip install flask flask-cors
-python seed.py      # creates + populates hostel_ticketing.db (run once)
-python app.py        # starts server on http://localhost:5000
+
+The API listens on http://localhost:5000. Missing tables/indexes initialize automatically; existing data is retained. DATABASE_PATH defaults to hostel_ticketing.db beside app.py. Set FRONTEND_ORIGINS to comma-separated exact allowed frontend origins.
+
+Do not run seed.py against production data. To try sample accounts, point DATABASE_PATH at a separate empty demo database, then run python seed.py.
+
+## Staff accounts
+
+```powershell
+python manage.py create-staff --name "Hostel Administrator" --email admin@example.edu --role admin
+python manage.py create-staff --name "KP-1 Warden" --email warden@example.edu --role warden --block KP-1
 ```
 
-## Sample logins (all seeded with password "password123" for students, "adminpass" for staff)
-- Student: astha@kiit.ac.in / password123
-- Admin:   admin@kiit.ac.in / adminpass
+Passwords are entered privately through prompts. Public signup can create students only.
 
-## API Endpoints
-- POST   /api/signup                     — create account
-- POST   /api/login                      — returns user info
-- GET    /api/tickets?hostel_block=&status=&sort=votes|newest
-- POST   /api/tickets                    — create ticket {user_id, category, description, hostel_block, floor, room_no}
-- PATCH  /api/tickets/<id>/status        — update status {status: "Open"|"In Progress"|"Resolved"}
-- POST   /api/tickets/<id>/vote          — upvote {user_id}
-- GET    /api/stats                      — dashboard counts (total/open/in_progress/resolved/overdue)
+## Tests
 
-Tickets open past 48 hours (and not Resolved) are automatically flagged `"overdue": true` in every response.
+```powershell
+python -m unittest -v
+```
+
+Twenty-four tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
+
+## Deployment
+
+Use gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 on Linux, persistent storage for DATABASE_PATH, and the deployed frontend origin in FRONTEND_ORIGINS. Deploy the matching frontend because authentication response contracts changed.
+
+See [the complete project guide](docs/PROJECT.md) for API payloads, migration details, role permissions, storage, deployment steps, and validation results. The previously committed database is excluded from source tracking; the local database file is retained.

@@ -6,19 +6,26 @@ some resolved) so the app looks populated for a demo.
 Run: python3 seed.py
 """
 import sqlite3
-import hashlib
+import os
+from pathlib import Path
+from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 
-DB_PATH = "hostel_ticketing.db"
+ROOT = Path(__file__).resolve().parent
+DB_PATH = os.environ.get("DATABASE_PATH", str(ROOT / "hostel_ticketing.db"))
 
 
 def hash_pw(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
+    return generate_password_hash(pw)
 
 
 def run():
     conn = sqlite3.connect(DB_PATH)
-    conn.executescript(open("schema.sql").read())
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.executescript((ROOT / "schema.sql").read_text(encoding="utf-8"))
+    if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] or conn.execute("SELECT COUNT(*) FROM tickets").fetchone()[0]:
+        conn.close()
+        raise SystemExit("Refusing to seed a populated database. Use a separate empty demo DATABASE_PATH.")
     cur = conn.cursor()
 
     # ---- Users ----
@@ -55,7 +62,8 @@ def run():
     conn.commit()
 
     # ---- Tickets ----
-    now = datetime.now()
+    from datetime import timezone
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     def ts(hours_ago):
         return (now - timedelta(hours=hours_ago)).strftime("%Y-%m-%d %H:%M:%S")

@@ -1,12 +1,8 @@
 -- Hostel Grievance & Maintenance Ticketing System
 -- Database Schema
 
-DROP TABLE IF EXISTS votes;
-DROP TABLE IF EXISTS comments;
-DROP TABLE IF EXISTS tickets;
-DROP TABLE IF EXISTS users;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
@@ -16,7 +12,7 @@ CREATE TABLE users (
     created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE tickets (
+CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     category TEXT NOT NULL CHECK (category IN ('Wi-Fi', 'AC', 'Water Purifier', 'Sanitation', 'Mess Food', 'Other')),
@@ -30,7 +26,7 @@ CREATE TABLE tickets (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE votes (
+CREATE TABLE IF NOT EXISTS votes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ticket_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
@@ -40,7 +36,7 @@ CREATE TABLE votes (
     UNIQUE (ticket_id, user_id)   -- prevents double-voting
 );
 
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ticket_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
@@ -49,3 +45,11 @@ CREATE TABLE comments (
     FOREIGN KEY (ticket_id) REFERENCES tickets(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_tickets_block_status ON tickets(hostel_block, status, created_at);
+CREATE INDEX IF NOT EXISTS idx_comments_ticket ON comments(ticket_id, created_at);
