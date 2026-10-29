@@ -1,10 +1,40 @@
-# HostelCare — Backend
+# HostelCare API
 
-Flask + PostgreSQL/SQLite API for hostel grievances, voting, discussions, sessions, and staff management.
+**The Flask backend for the [live HostelCare grievance portal](https://hostelgrievance.onrender.com/).** It stores tickets, comments, votes, sessions, and dated history, and enforces student hostel boundaries on the server.
+
+### [Open the live application →](https://hostelgrievance.onrender.com/)
+
+[API health](https://hostel-ticketing-backend.onrender.com/api/health) · [Frontend repository](https://github.com/asthasinghcs/hostel-ticketing-frontend) · [SRS](docs/HostelCare_SRS.pdf) · [Professor demo guide](docs/PROFESSOR_DEMO.md)
+
+## What it provides
+
+| Area | Behaviour |
+| --- | --- |
+| Accounts | Student signup accepts a 6–12 digit roll number at `@kiit.ac.in`. Staff accounts are created through a trusted command-line tool. |
+| Access | Students see and act within their stored hostel; wardens and admins manage all 36 configured KP/QC hostels. |
+| Tickets | Create, list, search by date and hostel, change status as staff, and read dated event history. |
+| Participation | One vote per student per unresolved ticket; authorized comments and discussion. |
+| Reporting | A consistent overview returns tickets and status totals together, including daily activity and overdue indicators. |
+| Storage | Neon PostgreSQL in the hosted deployment; SQLite when no database URL is configured locally. |
+
+The [deployed frontend](https://hostelgrievance.onrender.com/) presents these workflows. For a quick demonstration, sign in as `24054001@kiit.ac.in` / `Demo!KP1.01a` with **Student → KP → KP-1**, or as `hostelcare.demo.kp@gmail.com` / `Demo!Staff.KP.42` under **Warden & admin**. These are fictional public test accounts. The [demo guide](docs/PROFESSOR_DEMO.md) includes the QC-1 account and a five-minute walkthrough.
+
+## System design
+
+```text
+Browser (React + Vite)
+        │ HTTPS / JSON
+        ▼
+Render (Flask API) ──► Neon PostgreSQL
+        │
+        └─► temporary SQLite databases for local tests
+```
+
+Protected endpoints derive identity from an opaque bearer session, never a submitted user ID. Passwords and session tokens are stored as hashes. Database credentials stay on the server. The live app uses the `DATABASE_URL` connection and a direct connection for initialization; existing records survive restarts and redeployments.
 
 ## Run locally
 
-Use Python 3.10+ (verified with Python 3.12.10).
+Requires Python 3.10+.
 
 ```powershell
 python -m venv .venv
@@ -13,51 +43,45 @@ python -m pip install -r requirements.txt
 python app.py
 ```
 
-The API listens on http://localhost:5000. Missing tables/indexes initialize automatically; existing data is retained. DATABASE_PATH defaults to hostel_ticketing.db beside app.py. Set FRONTEND_ORIGINS to comma-separated exact allowed frontend origins.
+The API runs at `http://localhost:5000`. Without `DATABASE_URL`, it creates or opens `hostel_ticketing.db` locally. Set `FRONTEND_ORIGINS` to the comma-separated browser origins allowed to call the API. The deployed Neon connection string belongs in a private backend environment variable; never commit it.
 
-Do not run seed.py against production data. To try sample accounts, point DATABASE_PATH at a separate empty demo database, then run python seed.py.
-
-## Staff accounts
+To create a staff account locally:
 
 ```powershell
-python manage.py create-staff --name "Hostel Administrator" --email admin@example.edu --role admin
-python manage.py create-staff --name "KP-1 Warden" --email warden@example.edu --role warden --block KP-1
+python manage.py create-staff --name "KP Warden" --email warden@example.edu --role warden --block KP-1
 ```
 
-Passwords are entered privately through prompts. Public signup can create students only.
+The command prompts privately for a password. Public signup creates student accounts only. For demo fixtures and append-safe import instructions, see [demo accounts](docs/DEMO_ACCOUNTS.md).
 
-## Tests
+## API at a glance
+
+| Resource | Purpose |
+| --- | --- |
+| `GET /api/health`, `GET /api/hostels` | Storage health and configured hostel catalogue. |
+| `POST /api/signup`, `POST /api/login`, `GET /api/me`, `POST /api/logout` | Account and session flows. |
+| `GET /api/overview`, `GET /api/tickets`, `POST /api/tickets` | Consistent reporting and ticket submission. |
+| `PATCH /api/tickets/{id}/status` | Staff status transitions. |
+| `POST /api/tickets/{id}/vote`, `GET/POST /api/tickets/{id}/comments` | Participation and discussion. |
+| `GET /api/tickets/{id}/history`, `GET /api/stats` | Dated event history and counts. |
+
+See the [project guide](docs/PROJECT.md) and [SRS](docs/SRS.md) for complete contracts and authorization rules.
+
+## Checks and evidence
 
 ```powershell
 python -m unittest -v
+python docs/validation/check_srs_validation.py
 ```
 
-Thirty-eight tests run against temporary databases. They cover session handling, role boundaries, identity spoofing, ticket/vote/comment behavior, validation, overdue rules, migration safety, and CORS.
+The recorded baseline passed **38 backend regression tests**, **14 frontend tests**, and **40 API boundary checks**. Tests use disposable SQLite databases, while separate hosted checks verified Neon persistence, student isolation, staff scope, date counts, and CORS. [Review the validation report and raw results](docs/validation/README.md). The SRS states the limits of performance, accessibility, and security validation.
 
-## Deployment
+## Project documents
 
-Use gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 on Linux, persistent storage for DATABASE_PATH, and the deployed frontend origin in FRONTEND_ORIGINS. Deploy the matching frontend because authentication response contracts changed.
+| Document | Contents |
+| --- | --- |
+| [SRS (PDF)](docs/HostelCare_SRS.pdf) · [Word](docs/HostelCare_SRS.docx) · [source](docs/SRS.md) | Requirements, UI, database model, interfaces, testing, and traceability. |
+| [Professor demo](docs/PROFESSOR_DEMO.md) | Working demo logins and presentation sequence. |
+| [Neon deployment](docs/NEON_SETUP.md) | Hosted storage configuration and migration evidence. |
+| [Project guide](docs/PROJECT.md) | Detailed architecture, setup, API, deployment, and operations. |
 
-See [the complete project guide](docs/PROJECT.md) for API payloads, migration details, role permissions, storage, deployment steps, and validation results. The previously committed database is excluded from source tracking; the local database file is retained.
-
-## Hostels, recent demo data, and dates
-
-The app supports 36 configured hostels: KP-1–KP-25 and QC-1–QC-11. New student accounts use rollnumber@kiit.ac.in. Today, Last 7 days, From/To filters, daily totals, and ticket history use India time.
-
-[Demo accounts and import instructions](docs/DEMO_ACCOUNTS.md) lists all 40 synthetic student logins and three staff logins. The backend fixture is appended once with `python seed.py --append-demo` after setting DATABASE_PATH; it preserves existing records and detects repeats. The concrete local sample increased the ticket total from 20 to 60.
-
-## Render storage
-
-Set DATABASE_URL to the internal managed PostgreSQL URL in the backend environment. SQLite remains the local default. See [deployment and private migration instructions](docs/PROJECT.md#render-deployment). The application now uses Neon on the free plan; it no longer depends on the expiring Render database.
-
-## Professor demonstration
-
-Use [the quick professor demo guide](docs/PROFESSOR_DEMO.md) for verified mock logins, exact hostel choices, date filters, and the presentation walkthrough.
-
-## Neon deployment
-
-See [Neon setup and verification](docs/NEON_SETUP.md) for CLI commands, private connection configuration, migration results, and build/end-to-end proof.
-
-## Software Requirements Specification
-
-The submission includes the [SRS source](docs/SRS.md), [14-page PDF](docs/HostelCare_SRS.pdf), [editable Word document](docs/HostelCare_SRS.docx), and [validation report and reproducible boundary checks](docs/validation/README.md). It covers requirements, use cases, UI, database design, interfaces, testing and traceability.
+**Software Engineering · CS-02 · KIIT** — Sonali Kamila, Pratiksha Vyas, Astha Singh.
