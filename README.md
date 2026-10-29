@@ -83,5 +83,3 @@ The recorded baseline passed **38 backend regression tests**, **14 frontend test
 | [Professor demo](docs/PROFESSOR_DEMO.md) | Working demo logins and presentation sequence. |
 | [Neon deployment](docs/NEON_SETUP.md) | Hosted storage configuration and migration evidence. |
 | [Project guide](docs/PROJECT.md) | Detailed architecture, setup, API, deployment, and operations. |
-
-**Software Engineering · CS-02 · KIIT** — Sonali Kamila, Pratiksha Vyas, Astha Singh.
